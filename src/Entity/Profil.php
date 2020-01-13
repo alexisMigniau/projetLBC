@@ -3,30 +3,42 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Profil
  *
  * @ORM\Table(name="Profil")
+ * @UniqueEntity(fields="email")
  * @ORM\Entity(repositoryClass="App\Repository\ProfilRepository")
  */
-class Profil
+class Profil implements UserInterface
 {
     /**
-     * @var string
-     *
-     * @ORM\Column(name="login", type="string", length=50, nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\Column(type="integer")
+     * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $login;
+    private $id;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="mdp", type="string", length=50, nullable=false)
+     * @ORM\Column(type="string", length=191, unique=true)
+     * @Assert\NotBlank()
+     * @Assert\Email()
      */
-    private $mdp;
+    private $email;
+
+    /**
+     * @ORM\Column(type="string", length=64)
+     */
+    private $password;
+
+    /**
+     * @ORM\Column(name="is_active", type="boolean")
+     */
+    private $isActive;
 
     /**
      * @var string
@@ -43,18 +55,19 @@ class Profil
     private $prenom;
 
     /**
-     * @var string
-     *
-     * @ORM\Column(name="email", type="string", length=50, nullable=false)
+     * @ORM\Column(name="roles", type="array")
      */
-    private $email;
+    private $roles = array();
 
-    /**
-     * @var int|null
-     *
-     * @ORM\Column(name="typeprofil", type="integer", nullable=true)
-     */
-    private $typeprofil;
+    public function __construct() {
+        $this->isActive = true;
+        // may not be needed, see section on salt below
+        // $this->salt = md5(uniqid('', true));
+    }
+
+    public function getRoles() {
+        return $this->roles;
+    }
 
     /**
      * @var int|null
@@ -63,19 +76,15 @@ class Profil
      */
     private $valeur;
 
-    public function getLogin(): ?string
+
+    public function getPassword(): ?string
     {
-        return $this->login;
+        return $this->password;
     }
 
-    public function getMdp(): ?string
+    public function setPassword(string $password): self
     {
-        return $this->mdp;
-    }
-
-    public function setMdp(string $mdp): self
-    {
-        $this->mdp = $mdp;
+        $this->password = $password;
 
         return $this;
     }
@@ -83,6 +92,13 @@ class Profil
     public function getNom(): ?string
     {
         return $this->nom;
+    }
+
+    public function setUsername(string $mail): self
+    {
+        $this->email = $mail;
+
+        return $this;
     }
 
     public function setNom(string $nom): self
@@ -104,16 +120,14 @@ class Profil
         return $this;
     }
 
-    public function getEmail(): ?string
-    {
+    public function getUsername() {
         return $this->email;
     }
 
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
+    public function getSalt() {
+        // you *may* need a real salt depending on your encoder
+        // see section on salt below
+        return null;
     }
 
     public function getTypeprofil(): ?int
@@ -140,5 +154,11 @@ class Profil
         return $this;
     }
 
+    function getIsActive() {
+        return $this->isActive;
+    }
 
+    public function eraseCredentials() {
+       
+    }
 }
