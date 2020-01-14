@@ -14,19 +14,22 @@ class Comptable
 {
     /**
      * @var int
-     *
      * @ORM\Column(name="id_comptable", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $idComptable;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="signature", type="string", length=50, nullable=false)
+     * @ORM\Column(name="signature", type="string", length=50, nullable=true)
      */
     private $signature;
+
+    public function __construct($id)
+    {
+        $this->idCompatble = $id;
+    }
 
     public function getIdComptable(): ?int
     {

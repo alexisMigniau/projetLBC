@@ -14,14 +14,18 @@ security:
             http_basic: ~
             provider: classeProfil
             anonymous: ~
+            guard:
+                authenticators:
+                    - App\Security\LoginFormAuthenticator
             form_login:
                 login_path: login
-                check_path: login
+                check_path: security_login
             logout:
                 path:  /logout
-                target: /login
+                target: /
 
     access_control:
+        - { path: ^/home ,roles : ROLE_USER }
         - { path: ^/visiteur, roles: ROLE_VISITEUR }
         - { path: ^/responsable, roles: ROLE_RESPONSABLE }
         - { path: ^/comptable, roles: ROLE_COMPTABLE }

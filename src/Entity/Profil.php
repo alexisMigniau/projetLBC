@@ -130,18 +130,6 @@ class Profil implements UserInterface
         return null;
     }
 
-    public function getTypeprofil(): ?int
-    {
-        return $this->typeprofil;
-    }
-
-    public function setTypeprofil(?int $typeprofil): self
-    {
-        $this->typeprofil = $typeprofil;
-
-        return $this;
-    }
-
     public function getValeur(): ?int
     {
         return $this->valeur;
@@ -160,5 +148,36 @@ class Profil implements UserInterface
 
     public function eraseCredentials() {
        
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function setIsActive(bool $isActive): self
+    {
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
     }
 }

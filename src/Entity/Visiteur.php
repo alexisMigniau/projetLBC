@@ -19,7 +19,6 @@ class Visiteur
      *
      * @ORM\Column(name="matricule", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $matricule;
 
@@ -56,10 +55,11 @@ class Visiteur
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct($id)
     {
         $this->idAc = new \Doctrine\Common\Collections\ArrayCollection();
         $this->idPraticiens = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->matricule = $id;
     }
 
     public function getMatricule(): ?int

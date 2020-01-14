@@ -14,20 +14,24 @@ class Secteur
 {
     /**
      * @var int
-     *
+     * 
      * @ORM\Column(name="sec_num", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $secNum;
 
     /**
      * @var string
      *
-     * @ORM\Column(name="nom_secteur", type="string", length=50, nullable=false)
+     * @ORM\Column(name="nom_secteur", type="string", length=50, nullable=true)
      */
     private $nomSecteur;
 
+    public function __construct($id)
+    {
+        $this->secNum = $id;
+    }
+    
     public function getSecNum(): ?int
     {
         return $this->secNum;

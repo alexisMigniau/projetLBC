@@ -32,24 +32,34 @@
               <div class="text-center">
                 <h1 class="h4 text-gray-900 mb-4">Création d'un compte</h1>
               </div>
-              <form class="user" method="POST">
+              <form class="user" method="POST" oninput='RepeatPassword.setCustomValidity(RepeatPassword.value != password.value ? "Les mot de passe ne sont pas identiques" : "")'>
                 <div class="form-group row">
                   <div class="col-sm-6 mb-3 mb-sm-0">
-                    <input type="text" class="form-control form-control-user" name="prenom" placeholder="Prénom">
+                    <input type="text" class="form-control" name="prenom" placeholder="Prénom" required>
                   </div>
                   <div class="col-sm-6">
-                    <input type="text" class="form-control form-control-user" name="nom" placeholder="Nom">
+                    <input type="text" class="form-control" name="nom" placeholder="Nom" required>
                   </div>
-                </div>
-                <div class="form-group">
-                  <input type="text" class="form-control form-control-user" name="email" placeholder="Adresse email">
                 </div>
                 <div class="form-group row">
                   <div class="col-sm-6 mb-3 mb-sm-0">
-                    <input type="password" class="form-control form-control-user" name="InputPassword" placeholder="Mot de passe">
+                    <input type="email" class="form-control" name="email" placeholder="Adresse email" required>
                   </div>
                   <div class="col-sm-6">
-                    <input type="password" class="form-control form-control-user" name="RepeatPassword" placeholder="Confirmation du mot de passe">
+                    <select class="form-control" name="role" id="exampleFormControlSelect1" required>
+                      <option value="">Quelle est votre poste ?</option>
+                      <option value="ROLE_VISITEUR">Visiteur</option>
+                      <option value="ROLE_RESPONSABLE">Responsable secteur</option>
+                      <option value="ROLE_COMPTABLE">Comptable</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group row">
+                  <div class="col-sm-6 mb-3 mb-sm-0">
+                    <input type="password" class="form-control password" name="password" placeholder="Mot de passe" required>
+                  </div>
+                  <div class="col-sm-6">
+                    <input type="password" class="form-control confirm_password" name="RepeatPassword" placeholder="Confirmation du mot de passe" required>
                   </div>
                 </div>
                 <input type="submit" class="btn btn-primary btn-user btn-block" value="Créer un compte">
@@ -58,6 +68,18 @@
               <div class="text-center">
                 <a class="small" href="{{ path('login') }}">Vous avez déja un compte ?</a>
               </div>
+              {% for message in app.flashes('success') %}
+              <br/>
+              <div class="alert alert-success">
+                  {{ message }}
+              </div>
+              {% endfor %}
+              {% for message in app.flashes('danger') %}
+              <br/>
+              <div class="alert alert-danger">
+                  {{ message }}
+              </div>
+              {% endfor %}
         </div>
       </div>
     </div>

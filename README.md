@@ -15,3 +15,14 @@ Ensuite il faut faire la commande, pour voir les requêtes que va faire Symfony
 Pour lancer les requêtes, il faut faire la commande : 
 
 ``php bin/console doctrine:schema:update --force``
+
+**Création de routes**
+
+Si vous voulez limitez l'accès à une route, il faut mettre le nom du role au début de l'url :
+
+**Liste des rôles :**
+    - visiteur
+    - responsable
+    - comptable
+
+Par exemple la route : /visiteur : Sera accessible seulement par ceux qui ont le role visiteur

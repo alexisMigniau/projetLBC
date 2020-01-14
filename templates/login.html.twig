@@ -36,27 +36,36 @@
                   <div class="text-center">
                     <h1 class="h4 text-gray-900 mb-4">Connexion</h1>
                   </div>
-                  <form class="user">
+                  <form class="user" method="POST" action="{{ path('login')}}">
                     <div class="form-group">
-                      <input type="email" class="form-control form-control-user" id="email" aria-describedby="emailHelp" placeholder="Entrez votre addresse e-mail">
+                      <input type="email" class="form-control form-control-user" value="{{last_username}}" name="email" aria-describedby="emailHelp" placeholder="Entrez votre addresse e-mail" required>
                     </div>
                     <div class="form-group">
-                      <input type="password" class="form-control form-control-user" id="password" placeholder="Mot de passe">
+                      <input type="password" class="form-control form-control-user" name="password" placeholder="Mot de passe" required>
                     </div>
-                    <div class="form-group">
-                      <div class="custom-control custom-checkbox small">
-                        <input type="checkbox" class="custom-control-input" id="customCheck">
-                        <label class="custom-control-label" for="customCheck">Sauvegarder les identifiants</label>
-                      </div>
-                    </div>
-                    <a href="{{ path('login')}}" class="btn btn-primary btn-user btn-block">
-                      Connexion
-                    </a>
+                    <input type="submit" class="btn btn-primary btn-user btn-block" value="Connexion">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
                   </form>
                   <hr>
                   <div class="text-center">
-                    <a class="small" href="{{ path('register')}}">Créer un compte!</a>
+                    <a class="small" href="{{ path('register')}}">Vous n'avez pas de compte ? Créer un compte !</a>
                   </div>
+                  {% for message in app.flashes('success') %}
+                  <br/>
+                  <div class="alert alert-success">
+                      {{ message }}
+                  </div>
+                  {% endfor %}
+                  {% for message in app.flashes('danger') %}
+                  <br/>
+                  <div class="alert alert-danger">
+                      {{ message }}
+                  </div>
+                  {% endfor %}
+                  {% if error %}
+                  <br/>
+                  <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+                  {% endif %}
                 </div>
           </div>
         </div>
