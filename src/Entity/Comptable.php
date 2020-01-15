@@ -28,7 +28,7 @@ class Comptable
 
     public function __construct($id)
     {
-        $this->idCompatble = $id;
+        $this->idComptable = $id;
     }
 
     public function getIdComptable(): ?int
