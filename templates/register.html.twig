@@ -45,12 +45,20 @@
                   <div class="col-sm-6 mb-3 mb-sm-0">
                     <input type="email" class="form-control" name="email" placeholder="Adresse email" required>
                   </div>
-                  <div class="col-sm-6">
-                    <select class="form-control" name="role" id="exampleFormControlSelect1" required>
+                  <div class="col-sm-3">
+                    <select class="form-control" name="role" id="role" required>
                       <option value="">Quelle est votre poste ?</option>
                       <option value="ROLE_VISITEUR">Visiteur</option>
                       <option value="ROLE_RESPONSABLE">Responsable secteur</option>
                       <option value="ROLE_COMPTABLE">Comptable</option>
+                    </select>
+                  </div>
+                  <div class="col-sm-3">
+                    <select class="form-control" name="secteur" id="secteur">
+                      <option value="">Quelle est votre secteur ?</option>
+                      {% for secteur in listeSecteur %}
+                            <option value="{{ secteur.secNum }}">{{ secteur.nomSecteur }}</option>
+                      {% endfor %}
                     </select>
                   </div>
                 </div>
@@ -86,8 +94,29 @@
 
   </div>
 
- <!-- Bootstrap core JavaScript-->
   <script src="{{asset('vendor/jquery/jquery.min.js')}}"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('#secteur').hide();
+      //Si on choisit le role Responsable alors on affiche la liste déroulante des régions
+      $('#role').on('change' , function()
+      {
+        if(this.value == 'ROLE_RESPONSABLE')
+        {
+          $('#secteur').show();
+          $("#secteur").prop('required',true);
+        }
+        else
+        {
+          $('#secteur').hide();
+          $("#secteur").prop('required',false);
+        }
+      })
+    });
+  </script>
+
+ <!-- Bootstrap core JavaScript-->
   <script src="{{asset('vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 
   <!-- Core plugin JavaScript-->

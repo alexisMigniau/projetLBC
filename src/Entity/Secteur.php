@@ -27,6 +27,13 @@ class Secteur
      */
     private $nomSecteur;
 
+     /**
+     * @var int
+     * 
+     * @ORM\Column(name="idResponsable", type="integer", nullable=true)
+     */
+    private $idResponsable;
+
     public function __construct($id)
     {
         $this->secNum = $id;
@@ -45,6 +52,18 @@ class Secteur
     public function setNomSecteur(string $nomSecteur): self
     {
         $this->nomSecteur = $nomSecteur;
+
+        return $this;
+    }
+
+    public function getIdResponsable(): ?int
+    {
+        return $this->idResponsable;
+    }
+
+    public function setIdResponsable(?int $idResponsable): self
+    {
+        $this->idResponsable = $idResponsable;
 
         return $this;
     }

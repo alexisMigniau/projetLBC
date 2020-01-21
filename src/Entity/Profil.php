@@ -76,6 +76,10 @@ class Profil implements UserInterface
      */
     private $valeur;
 
+    public function hasRole($role)
+    {
+        return in_array($role,$this->roles, TRUE);
+    }
 
     public function getPassword(): ?string
     {

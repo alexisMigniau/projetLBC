@@ -79,7 +79,9 @@
 
                 if($roleDemande == 'ROLE_RESPONSABLE')
                 {
-                    $secteur = new Secteur($profil->getId());
+                    $secteur = $this->getDoctrine()->getManager()->getRepository(Secteur::class)->findOneBy(array('secNum' => $request->get('secteur')));
+                    $secteur->setIdResponsable($profil->getId());
+
                     $entityManager->persist($secteur);
                 }
                 else if($roleDemande == 'ROLE_COMPTABLE')
@@ -100,7 +102,11 @@
                 return $this->redirectToRoute('login');
             }
             
-            $html = $this->render('register.html.twig');
+            $em = $this->getDoctrine()->getManager();
+            $listeSecteur = $em->getRepository(Secteur::class)->findAll();
+
+            $html = $this->render('register.html.twig' , array(
+                'listeSecteur' => $listeSecteur));
 
             return $html;
         }
