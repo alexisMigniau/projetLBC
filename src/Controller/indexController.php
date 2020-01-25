@@ -64,7 +64,7 @@
                 $profil = new Profil();
 
                 //On chiffre le mot de passe
-                $passwordChiffrer = $passwordEncoder->encodePassword($profil, $request->get('password'));
+                $passwordChiffrer = $passwordEncoder->encodePassword($profil, $request->request->get('password'));
 
                 $profil->setPassword($passwordChiffrer);
                 $profil->setUsername($request->request->get('email'));

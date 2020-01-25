@@ -19,21 +19,35 @@ class Praticiens
      *
      * @ORM\Column(name="id_praticiens", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="IDENTITY")
+     * @ORM\GeneratedValue(strategy="NONE")
      */
     private $idPraticiens;
 
     /**
-     * @var string|null
+     * @var string
      *
-     * @ORM\Column(name="mail", type="string", length=50, nullable=true)
+     * @ORM\Column(name="nom", type="string", nullable=false)
      */
-    private $mail;
+    private $nom;
 
     /**
-     * @var int
+     * @var string
      *
-     * @ORM\Column(name="notoriete", type="integer", nullable=false)
+     * @ORM\Column(name="prenom", type="string", nullable=false)
+     */
+    private $prenom;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="adresse", type="string", nullable=false)
+     */
+    private $adresse;
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(name="notoriete", type="string", nullable=false)
      */
     private $notoriete;
 

@@ -24,7 +24,7 @@ class PraticiensRegion
     /**
      * @var bool
      *
-     * @ORM\Column(name="active", type="boolean", nullable=false)
+     * @ORM\Column(name="active", type="boolean", nullable=false, options={"default": true})
      */
     private $active;
 
