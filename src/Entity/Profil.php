@@ -65,7 +65,8 @@ class Profil implements UserInterface
         // $this->salt = md5(uniqid('', true));
     }
 
-    public function getRoles() {
+    public function getRoles(): ?array
+    {
         return $this->roles;
     }
 
@@ -146,7 +147,8 @@ class Profil implements UserInterface
         return $this;
     }
 
-    function getIsActive() {
+    public function getIsActive(): ?bool
+    {
         return $this->isActive;
     }
 

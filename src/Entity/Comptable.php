@@ -41,7 +41,7 @@ class Comptable
         return $this->signature;
     }
 
-    public function setSignature(string $signature): self
+    public function setSignature(?string $signature): self
     {
         $this->signature = $signature;
 

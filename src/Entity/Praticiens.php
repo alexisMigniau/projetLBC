@@ -123,12 +123,12 @@ class Praticiens
         return $this;
     }
 
-    public function getNotoriete(): ?int
+    public function getNotoriete(): ?string
     {
         return $this->notoriete;
     }
 
-    public function setNotoriete(int $notoriete): self
+    public function setNotoriete(string $notoriete): self
     {
         $this->notoriete = $notoriete;
 
@@ -221,6 +221,42 @@ class Praticiens
             $this->matricule->removeElement($matricule);
             $matricule->removeIdPraticien($this);
         }
+
+        return $this;
+    }
+
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
+
+    public function setNom(string $nom): self
+    {
+        $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getPrenom(): ?string
+    {
+        return $this->prenom;
+    }
+
+    public function setPrenom(string $prenom): self
+    {
+        $this->prenom = $prenom;
+
+        return $this;
+    }
+
+    public function getAdresse(): ?string
+    {
+        return $this->adresse;
+    }
+
+    public function setAdresse(string $adresse): self
+    {
+        $this->adresse = $adresse;
 
         return $this;
     }

@@ -38,7 +38,7 @@ class Secteur
     {
         $this->secNum = $id;
     }
-    
+
     public function getSecNum(): ?int
     {
         return $this->secNum;
@@ -49,7 +49,7 @@ class Secteur
         return $this->nomSecteur;
     }
 
-    public function setNomSecteur(string $nomSecteur): self
+    public function setNomSecteur(?string $nomSecteur): self
     {
         $this->nomSecteur = $nomSecteur;
 
