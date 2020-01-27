@@ -15,9 +15,7 @@ class VisiteurRegion
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="dateAffectation", type="date", nullable=false)
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="NONE")
+     * @ORM\Column(name="dateAffectation", type="datetime", nullable=false)
      */
     private $dateaffectation;
 
@@ -51,6 +49,12 @@ class VisiteurRegion
      * })
      */
     private $matricule;
+
+    public function __construct()
+    {
+        $this->dateaffectation = new \DateTime();
+        $this->active = true;
+    }
 
     public function getDateaffectation(): ?\DateTimeInterface
     {

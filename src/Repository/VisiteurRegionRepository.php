@@ -19,6 +19,18 @@ class VisiteurRegionRepository extends ServiceEntityRepository
         parent::__construct($registry, VisiteurRegion::class);
     }
 
+    public function getVisiteurByIdRegion($regCode)
+    {
+        return $this->createQueryBuilder('v')
+            ->andWhere('v.regCode = :regCode')
+            ->andWhere('v.active = 1')
+            ->leftJoin('App\Entity\Profil' , 'p', 'WITH' , 'v.matricule = p.id')
+            ->setParameter('regCode' , $regCode)
+            ->select('(v.matricule)' , '(p.prenom)' ,'(p.nom)')
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return VisiteurRegion[] Returns an array of VisiteurRegion objects
     //  */

@@ -1,0 +1,184 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+{# On affiche le formulaire de création d'un praticiens seulement si c'est un responsable qui est connecté #}
+    {% if is_granted('ROLE_RESPONSABLE') %}
+         <div class="card shadow mb-4 ">
+            <a href="#collapseCardExample" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseCardExample">
+                <h6 class="m-0 font-weight-bold">Création de praticiens</h6>
+            </a>
+            <!-- Card Content - Collapse -->
+            <div class="collapse" id="collapseCardExample">
+                <div class="card-body">
+                    <form class="user" method="POST" action="{{ path('creationPraticien') }}" autocomplete="off">
+                        <div class="form-group row">
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="email" class="form-control" name="email" placeholder="Adresse email" required>
+                            </div>
+                            <div class="col-sm-4 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="adresse" id="adresse" placeholder="Adresse" required>
+                                <input id="latitude" name="latitude" type="hidden" required>
+                                <input id="longitude" name="longitude" type="hidden" required>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="nom" placeholder="Nom" required>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="Prenom" placeholder="Prenom" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="number" step="any" class="form-control" name="notoriete" placeholder="Notoriété" required min="0" max="10">
+                            </div>
+                            <div class="input-group col-sm-4 mb-3 mb-sm-0">
+                                <div class="input-group-prepend">
+                                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalSpecialite">Création d'une spécialité</button>
+                                </div>
+                                <select class="form-control" name="specialite" id="specialite" required>
+                                    <option value="">Choisissez une spécialité</option>
+                                    {% for spec in listeSpec %}
+                                        <option value="{{ spec.idSpecialite }}">{{ spec.nomSpecialite }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <select class="form-control" name="region" id="region" required>
+                                    <option value="">Choisissez une région</option>
+                                    {% for region in listeRegion %}
+                                        <option value="{{ region.regCode}}">{{ region.nomRegion }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <select class="btn multiSelect" multiple="multiple" name="listeVisiteur[]" id="listeVisiteur">
+                                </select>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0 text-right">
+                                <input type="submit" class="btn btn-success" value="Créer un praticien">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# Modal pour créer une spécialité #}
+        <div class="modal fade" id="modalSpecialite" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Création d'une spécialite</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body formSpecialite">
+                        <input type="text" class="form-control" name="nomSpecialite" id="nomSpecialite" placeholder="Nom de la spécialite">
+                        <div id="alertSpecialiteVide">
+                            <br>
+                            <div class="alert alert-danger">Vous devez rentrez un nom pour la spécialite à créee !</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-success" id="saveSpecialite">Créer la Specialite</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/places.js@1.17.1"></script>
+
+        {# Script pour la partie création de praticiens #}
+        <script type="text/javascript">
+            function initMultiSelect()
+            {
+                 // Init pour le select à choix multiple
+                $('.multiSelect').multiselect(
+                {
+                    templates: {
+                        button: '<button type="button" class="btn btn-primary multiselect dropdown-toggle" data-toggle="dropdown">Choisissez un ou des visiteurs</button>'
+                }});
+
+                 $('.multiSelect').multiselect('disable');
+            }
+
+            $(document).ready(function() {
+                $('#alertSpecialiteVide').hide();
+
+                initMultiSelect();
+
+                //Création d'une Specialite
+                $('#saveSpecialite').click(function(){
+                    var nomSpecialite = $('#nomSpecialite').val();
+
+                    if(nomSpecialite.length === 0)
+                    {
+                        $('#alertSpecialiteVide').show();
+                        return false;
+                    } else
+                    {
+                        //On fait une requête ajax pour ajouter une région
+                        $.ajax({
+                            url: "{{ path('ajouterSpecialite') }}",
+                            type: 'POST',
+                            data: 'nomSpecialite=' + nomSpecialite,
+                            // Si on a une réponse success alors on ferme le pop-up et on sélectionne la région qui vient d'être créee dans la liste
+                            success: function(response)
+                            {
+                                $('#modalSpecialite').modal('toggle');
+                                $('#specialite').append("<option selected value=" + response + ">" + nomSpecialite + "</option>");
+                                $('#alertSpecialiteVide').hide();
+                            }
+                        })
+                    }
+                })
+                //Lors du choix de la région, il faut actualiser la liste des visiteurs qui sont liée à cette région
+                $('#region').on('change' , function()
+                {
+                    
+                    $.ajax({
+                        url: "{{ path('getVisiteurByRegion') }}",
+                        type: 'POST',
+                        data: 'regCode=' + this.value,
+                        success: function(response)
+                        {
+                            var taille = response.length;
+
+                            $('#listeVisiteur').empty();
+
+                            var listeVisiteur = [];
+
+                            for(var i = 0; i < taille; i++)
+                                listeVisiteur.push({label:response[i][2] + " " + response[i][3] , title: response[i][2] + " " + response[i][3] , value: response[i][1]});
+
+                            $('.multiSelect').multiselect('dataprovider', listeVisiteur);
+                            
+                            if(response[0] == undefined)
+                                $('.multiSelect').multiselect('disable');
+                        }
+                    });
+                });
+
+                //Fonction autocomplete pour l'adresse
+                var placesAutocomplete = places({
+                    appId: 'plWVN0RARQTV',
+                    apiKey: '98227310a78a6ae36adc1a6185f79d82',
+                    container: document.querySelector('#adresse'),
+                    language: 'fr',
+                    countries: ['fr']
+                });
+
+                //Lorsqu'on a choisit une adresse, on met les input longitude et latitude a la bonne valeur
+                placesAutocomplete.on('change', e =>  {
+                    var lat = e.suggestion.latlng.lat;
+                    var lng = e.suggestion.latlng.lng;
+                    
+                    $('#latitude').val(lat);
+                    $('#longitude').val(lng);
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock %}

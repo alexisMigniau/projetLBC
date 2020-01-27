@@ -19,7 +19,7 @@ class Praticiens
      *
      * @ORM\Column(name="id_praticiens", type="integer", nullable=false)
      * @ORM\Id
-     * @ORM\GeneratedValue(strategy="NONE")
+     * @ORM\GeneratedValue(strategy="IDENTITY")
      */
     private $idPraticiens;
 
