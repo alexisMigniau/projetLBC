@@ -32,12 +32,21 @@
             $listeRegion =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
             $listeSpec = $em->getRepository(Specialite::class)->findAll();
 
-            $html = $this->render('modulePraticiens/modulePraticiens.html.twig' , array(
-                'title' => 'Gestion des praticiens' , 
-                'listeRegion' => $listeRegion,
-                'listeSpec' => $listeSpec));
+            //On récupère la liste des praticiens, si c'est un visiteur, tout ceux qui sont dans son portefeuille, et si c'est un responsable, tout les praticiens qui sont dans son secteur
+            if($user->hasRole('ROLE_RESPONSABLE'))
+            {
+                $listePraticien = $em->getRepository(PraticiensRegion::class)->findBy(array('regCode' => array_column($listeRegion , "regCode") , 'active' => 1));
 
-            return $html;
+                $listeVisiteur = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegion , "regCode") , 'active' => 1));
+
+                $html = $this->render('modulePraticiens/modulePraticiens.html.twig' , array(
+                    'title' => 'Gestion des praticiens' ,
+                    'listeRegion' => $listeRegion,
+                    'listePraticien' => $listePraticien,
+                    'listeVisiteur' => $listeVisiteur,
+                    'listeSpec' => $listeSpec));
+                return $html;
+            }
         }
 
         /**
@@ -91,8 +100,16 @@
 
                 $this->addFlash('success', 'Vous avez créer un praticiens');
                 return $this->redirectToRoute('gestionPraticiens');
-
             }
+        }
+
+        /**
+         * @Route("/modificationPraticien", name="creationPraticien", methods={"POST"})
+         */
+        public function modificationPraticien(Request $request)
+        {
+            $this->addFlash('success', 'Vous avez bien modifier ce praticiens');
+            return $this->redirectToRoute('gestionPraticiens');
         }
 
         /**

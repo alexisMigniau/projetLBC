@@ -30,7 +30,6 @@ class VisiteurRegionRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
-
     // /**
     //  * @return VisiteurRegion[] Returns an array of VisiteurRegion objects
     //  */

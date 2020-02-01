@@ -97,5 +97,12 @@ class PraticiensRegion
         return $this;
     }
 
+    public function setDateaffectation(\DateTimeInterface $dateaffectation): self
+    {
+        $this->dateaffectation = $dateaffectation;
+
+        return $this;
+    }
+
 
 }
