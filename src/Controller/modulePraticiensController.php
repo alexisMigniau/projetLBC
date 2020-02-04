@@ -79,11 +79,15 @@
 
                 // On ajoute le praticien au portefeuille des visiteurs qui sont sélectionnées
                 $listeIdVisiteur = $data->get('listeVisiteur');
-                
-                foreach($listeIdVisiteur as $visiteur)
+
+                // On ajoute ce praticien dans le portefeuille des visiteurs sélectionnés
+                if($listeIdVisiteur != null)
                 {
-                    $objectVisiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $visiteur));
-                    $praticien->addMatricule($objectVisiteur);
+                    foreach($listeIdVisiteur as $visiteur)
+                    {
+                        $objectVisiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $visiteur));
+                        $praticien->addMatricule($objectVisiteur);
+                    }
                 }
 
                 // On fait l'affectation entre le praticien et la région
@@ -104,7 +108,7 @@
         }
 
         /**
-         * @Route("/modificationPraticien", name="creationPraticien", methods={"POST"})
+         * @Route("/modificationPraticien", name="modificationPraticien", methods={"POST"})
          */
         public function modificationPraticien(Request $request)
         {
