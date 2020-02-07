@@ -15,18 +15,15 @@
                     <form class="user" method="POST" action="{{ path('creationPraticien') }}" autocomplete="off">
                         <div class="form-group row">
                             <div class="col-sm-2 mb-3 mb-sm-0">
-                                <input type="email" class="form-control" name="email" placeholder="Adresse email" required>
+                                <input type="text" class="form-control" name="nom" placeholder="Nom" required>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="Prenom" placeholder="Prenom" required>
                             </div>
                             <div class="col-sm-4 mb-3 mb-sm-0">
                                 <input type="text" class="form-control" name="adresse" id="adresse" placeholder="Adresse" required>
                                 <input id="latitude" name="latitude" type="hidden" required>
                                 <input id="longitude" name="longitude" type="hidden" required>
-                            </div>
-                            <div class="col-sm-2 mb-3 mb-sm-0">
-                                <input type="text" class="form-control" name="nom" placeholder="Nom" required>
-                            </div>
-                            <div class="col-sm-2 mb-3 mb-sm-0">
-                                <input type="text" class="form-control" name="Prenom" placeholder="Prenom" required>
                             </div>
                         </div>
                         <div class="form-group row">
@@ -38,7 +35,7 @@
                                     <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalSpecialite">Création d'une spécialité</button>
                                 </div>
                                 <select class="form-control" name="specialite" id="specialite" required>
-                                    <option value="">Choisissez une spécialité</option>
+                                    <option value="" hidden>Choisissez une spécialité</option>
                                     {% for spec in listeSpec %}
                                         <option value="{{ spec.idSpecialite }}">{{ spec.nomSpecialite }}</option>
                                     {% endfor %}
@@ -46,7 +43,7 @@
                             </div>
                             <div class="col-sm-2 mb-3 mb-sm-0">
                                 <select class="form-control" name="region" id="region" required>
-                                    <option value="">Choisissez une région</option>
+                                    <option value="" hidden>Choisissez une région</option>
                                     {% for region in listeRegion %}
                                         <option value="{{ region.regCode}}">{{ region.nomRegion }}</option>
                                     {% endfor %}
@@ -159,31 +156,6 @@
         </script>
     
     {% endif %}
-
-        {# Modal pour créer une spécialité #}
-        <div class="modal fade" id="modalSpecialite" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Création d'une spécialite</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body formSpecialite">
-                        <input type="text" class="form-control" name="nomSpecialite" id="nomSpecialite" placeholder="Nom de la spécialite">
-                        <div id="alertSpecialiteVide">
-                            <br>
-                            <div class="alert alert-danger">Vous devez rentrez un nom pour la spécialite à créee !</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
-                        <button type="button" class="btn btn-success" id="saveSpecialite">Créer la Specialite</button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         {# Module recherche #}
         <div class="card shadow mb-4 ">
@@ -435,47 +407,54 @@
                     <form class="user" method="POST" action="{{ path('modificationPraticien') }}" autocomplete="off">
                     <div class="modal-body">
                             <div class="form-group row">
+                                <input name="id" id="modifId" type="hidden">
                                 <div class="col-sm-2 mb-3 mb-sm-0">
-                                    <input type="email" class="form-control" name="email" placeholder="Adresse email" required>
+                                    <input type="text" class="form-control" id="modifNom" name="nom" placeholder="Nom" required>
                                 </div>
-                                <div class="col-sm-4 mb-3 mb-sm-0">
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" id="modifPrenom" name="Prenom" placeholder="Prenom" required>
+                                </div>
+                                <div class="col-sm-6 mb-3 mb-sm-0">
                                     <input type="text" class="form-control" name="adresse" id="modifAdresse" placeholder="Adresse" required>
                                     <input id="modifLatitude" name="latitude" type="hidden" required>
                                     <input id="modifLongitude" name="longitude" type="hidden" required>
                                 </div>
-                                <div class="col-sm-2 mb-3 mb-sm-0">
-                                    <input type="text" class="form-control" name="nom" placeholder="Nom" required>
-                                </div>
-                                <div class="col-sm-2 mb-3 mb-sm-0">
-                                    <input type="text" class="form-control" name="Prenom" placeholder="Prenom" required>
-                                </div>
+                                
                             </div>
                             <div class="form-group row">
                                 <div class="col-sm-2 mb-3 mb-sm-0">
-                                    <input type="number" step="any" class="form-control" name="notoriete" placeholder="Notoriété" required min="0" max="10">
+                                    <input type="number" step="any" class="form-control" id="modifNotoriete" name="notoriete" placeholder="Notoriété" required min="0" max="10">
                                 </div>
-                                <div class="input-group col-sm-4 mb-3 mb-sm-0">
-                                    <div class="input-group-prepend">
-                                        <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalModifSpecialite">Création d'une spécialité</button>
-                                    </div>
+                                <div class="input-group col-sm-5 mb-3 mb-sm-0">
+
                                     <select class="form-control" name="specialite" id="modifSpecialite" required>
-                                        <option value="">Choisissez une spécialité</option>
+                                        <option value="" hidden>Choisissez une spécialité</option>
                                         {% for spec in listeSpec %}
                                             <option value="{{ spec.idSpecialite }}">{{ spec.nomSpecialite }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-sm-2 mb-3 mb-sm-0">
-                                    <select class="form-control" name="region" id="modifRegion" required>
-                                        <option value="">Choisissez une région</option>
+                                    <select class="form-control" name="region" id="modifRegion" required {% if not is_granted('ROLE_RESPONSABLE') %} disabled {% endif %}>
+                                        <option value="" hidden>Choisissez une région</option>
                                         {% for region in listeRegion %}
                                             <option value="{{ region.regCode}}">{{ region.nomRegion }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-sm-2 mb-3 mb-sm-0">
-                                    <select class="btn multiSelect" multiple="multiple" name="listeVisiteur[]" id="modifListeVisiteur">
-                                    </select>
+                                    {% if is_granted('ROLE_RESPONSABLE') %}
+                                        <select class="btn multiSelect" multiple="multiple" name="listeVisiteur[]" id="modifListeVisiteur">
+                                        </select>
+                                    {% else %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Liste des visiteurs
+                                            </button>
+                                            <div class="dropdown-menu" id="modeVisit_listeVisiteur" aria-labelledby="dropdownMenuButton">
+                                            </div>
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div class="col-sm-2 mb-3 mb-sm-0 text-right">
                                 </div>
@@ -559,13 +538,15 @@
                                 $('#modifListeVisiteur').multiselect('disable');
                         }
                     });
+
+
                 });
 
                 //Fonction autocomplete pour l'adresse
                 var placesAutocomplete = places({
                     appId: 'plWVN0RARQTV',
                     apiKey: '98227310a78a6ae36adc1a6185f79d82',
-                    container: document.querySelector('#adresse'),
+                    container: document.querySelector('#modifAdresse'),
                     language: 'fr',
                     countries: ['fr']
                 });
@@ -586,11 +567,80 @@
                     // On parcours la liste de tout les praticiens, et si c'est celui qu'on doit modifier , alors on les champs au valeurs correspondante
                     {% for praticienRegion in listePraticien %}
                         {% set praticien = praticienRegion.getIdPraticiens %}
-                        if( {{ praticien.idPraticiens }} == idPraticiens);
-                            
+                        
+                        if(idPraticiens == '{{ praticien.idPraticiens }}' )
+                        {
+                            $('#modifId').val('{{ praticien.idPraticiens }}');   
+                            $('#modifNom').val('{{ praticien.nom }}');
+                            $('#modifPrenom').val('{{ praticien.prenom }}');
+                            $('#modifNotoriete').val('{{ praticien.notoriete }}');
+                            $('#modifAdresse').val('{{ praticien.adresse }}');
+                            $('#modifLongitude').val('{{ praticien.longitude }}');
+                            $('#modifLatitude').val('{{ praticien.latitude }}');
+                            $('#modifSpecialite').val('{{ praticien.idSpecialite.idSpecialite }}');
+                            $('#modifRegion').val('{{ praticienRegion.regCode.regCode }}');
+
+                            // Si c'est un responsable alors , on coche les bonnes cases dans le multiselect, et si c'est un visiteur, on affiche seulement les visiteurs qui y sont liée
+                            {% if is_granted('ROLE_RESPONSABLE') %}
+                                $.ajax({
+                                    url: "{{ path('getVisiteurByRegion') }}",
+                                    type: 'POST',
+                                    data: 'regCode={{ praticienRegion.regCode.regCode }}',
+                                    success: function(response)
+                                    {
+                                        var taille = response.length;
+
+                                        $('#modifListeVisiteur').empty();
+
+                                        var listeVisiteur = [];
+
+                                        for(var i = 0; i < taille; i++)
+                                            listeVisiteur.push({label:response[i][2] + " " + response[i][3] , title: response[i][2] + " " + response[i][3] , value: response[i][1]});
+
+                                        $('#modifListeVisiteur').multiselect('dataprovider', listeVisiteur);
+                                        
+                                        if(response[0] == undefined)
+                                            $('#modifListeVisiteur').multiselect('disable');
+
+                                        {% for visiteur in praticien.matricule %}
+                                            $('#modifListeVisiteur').multiselect('select' , '{{ visiteur.matricule.id }}');
+                                        {% endfor %}
+                                    }
+                                });
+                            {% else %}
+                                $('#modeVisit_listeVisiteur').empty();
+                                {% for visiteur in praticien.matricule %}
+                                    $('#modeVisit_listeVisiteur').append('<a class="dropdown-item" href="#">{{ visiteur.matricule.prenom }} {{ visiteur.matricule.nom }}</a>');
+                                {% endfor %}
+                            {% endif %}
+                        }
                     {% endfor %}
-                });
+                    });
             });
         </script>
 
+         {# Modal pour créer une spécialité #}
+        <div class="modal fade" id="modalSpecialite" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Création d'une spécialite</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body formSpecialite">
+                        <input type="text" class="form-control" name="nomSpecialite" id="nomSpecialite" placeholder="Nom de la spécialite">
+                        <div id="alertSpecialiteVide">
+                            <br>
+                            <div class="alert alert-danger">Vous devez rentrez un nom pour la spécialite à créee !</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-success" id="saveSpecialite">Créer la Specialite</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 {% endblock %}

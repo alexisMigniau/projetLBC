@@ -68,7 +68,6 @@
                 // On crée un praticien
                 $praticien = new Praticiens();
 
-                $praticien->setMail($data->get('email'));
                 $praticien->setNom($data->get('nom'));
                 $praticien->setPrenom($data->get('Prenom'));
                 $praticien->setNotoriete($data->get('notoriete'));
@@ -112,6 +111,73 @@
          */
         public function modificationPraticien(Request $request)
         {
+            //On récupère le praticien à modifier
+            $user = $this->getUser();
+            $em = $this->getDoctrine()->getManager();
+
+            $data = $request->request;
+
+            $praticien =  $em->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('id')));
+
+            //On récupère l'entité spécialité, et région grâce au formulaire
+            $specialite = $em->getRepository(Specialite::class)->findOneBy(array('idSpecialite' => $data->get('specialite')));
+            $region = $em->getRepository(Region::class)->findOneBy(array('regCode' => $data->get('region')));
+
+            $praticien->setNom($data->get('nom'));
+            $praticien->setPrenom($data->get('Prenom'));
+            $praticien->setNotoriete($data->get('notoriete'));
+            $praticien->setAdresse($data->get('adresse'));
+            $praticien->setLongitude($data->get('longitude'));
+            $praticien->setLatitude($data->get('latitude'));
+            $praticien->setIdSpecialite($specialite);
+
+            //Si l'utilisateur est un responsable alors il peut changer la région et les visiteurs
+            if($user->hasRole('ROLE_RESPONSABLE'))
+            {
+                $regionActuelle = $em->getRepository(PraticiensRegion::class)->findOneBy(array('idPraticiens' => $data->get('id'), 'active' => 1));
+
+                //Si la région actuelle est différente de la région demandée alors on crée une nouvelle affectation , et on met l'ancienne a inactive
+                if($regionActuelle->getRegCode() != $region)
+                {
+                    $regionActuelle->setActive(false);
+
+                    // On fait l'affectation entre le praticien et la région
+                    $praticienRegion = new PraticiensRegion();
+                    $praticienRegion->setIdPraticiens($praticien);
+                    $praticienRegion->setRegCode($region);
+
+                    //On enregistre les changements
+                    $em->persist($praticienRegion);
+                }
+
+                // On enlève le praticien du portefeuille de tout les visiteurs
+                $listeRegion =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
+                $listeAllVisiteur = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegion , "regCode") , 'active' => 1));
+
+                foreach($listeAllVisiteur as $visiteur)
+                {
+                    $ObjVisiteur = $visiteur->getMatricule();
+                    $ObjVisiteur->removeIdPraticien($praticien);
+                }
+
+                // On ajoute le praticien au portefeuille des visiteurs qui sont sélectionnées
+                $listeIdVisiteur = $data->get('listeVisiteur');
+
+                // On ajoute ce praticien dans le portefeuille des visiteurs sélectionnés
+                if($listeIdVisiteur != null)
+                {
+                    foreach($listeIdVisiteur as $visiteur)
+                    {
+                        $ObjVisiteur = $em->getRepository(Visiteur::class)->findOneBy(array('matricule' => $visiteur));
+                        $ObjVisiteur->addIdPraticien($praticien);
+                    }
+                }
+            }
+
+            //On enregistre les changements
+            $em->persist($praticien);
+            $em->flush();
+
             $this->addFlash('success', 'Vous avez bien modifier ce praticiens');
             return $this->redirectToRoute('gestionPraticiens');
         }
