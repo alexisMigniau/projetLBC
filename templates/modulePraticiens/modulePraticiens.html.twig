@@ -272,7 +272,7 @@
                 L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
                     attribution: 'Projet LBC'
                 }).addTo(map);
-
+                
 
                 //On crée un tableau qui contient tout les markers
                 var listeMarker = new Object();
@@ -390,6 +390,11 @@
 
                     //On met à jour les marqueurs sur la map
                     updateMap(dataTable.rows({search:'applied'}).data());                  
+                });
+
+                $("a[href='#pills-carte']").on('shown.bs.tab', function(e) {
+                    console.log("test");
+                    map.invalidateSize();
                 });
             } );
         </script>
