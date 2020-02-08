@@ -2,6 +2,8 @@
 
 {% block body %}
 {# On affiche le formulaire de création d'un praticiens seulement si c'est un responsable qui est connecté #}
+    <script src="https://cdn.jsdelivr.net/npm/places.js@1.17.1"></script>
+
     {% if is_granted('ROLE_RESPONSABLE') %}
 
         {# Création de praticiens #}
@@ -61,8 +63,6 @@
                 </div>
             </div>
         </div>
-
-        <script src="https://cdn.jsdelivr.net/npm/places.js@1.17.1"></script>
 
         {# Script pour la partie création de praticiens #}
         <script type="text/javascript">
@@ -168,25 +168,29 @@
 
                     {# Système de recherche #}
                     <div class="input-group mb-3">
-                        <select class="custom-select col-sm-2 bg-warning text-dark" id="typeRecherche">
-                            <option selected value="multicritere">Recherche multicritère</option>
-                            <option value="region">Recherche par région</option>
-                            <option value="visiteur">Recherche par visiteur</option>
-                        </select>
-                        <input type="text" class="form-control col-sm-4" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
-                        <select class="custom-select col-sm-4" id="selectRegion">
-                            <option selected value="">Choix d'une région</option>
-                            {% for region in listeRegion %}
-                            <option value="{{ region.nomRegion }}">{{ region.nomRegion }}</option>
-                            {% endfor %}
-                        </select>
-                        <select class="custom-select col-sm-4" id="selectVisiteur">
-                            <option selected value="">Choix d'un visiteur</option>
-                            {% for visiteurRegion in listeVisiteur %}
-                            {% set visiteur = visiteurRegion.matricule.matricule %}
-                            <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
-                            {% endfor %}
-                        </select>
+                        {% if is_granted('ROLE_RESPONSABLE') %}
+                            <select class="custom-select col-sm-2 bg-warning text-dark" id="typeRecherche">
+                                <option selected value="multicritere">Recherche multicritère</option>
+                                <option value="region">Recherche par région</option>
+                                <option value="visiteur">Recherche par visiteur</option>
+                            </select>
+                            <input type="text" class="form-control col-sm-4" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
+                            <select class="custom-select col-sm-4" id="selectRegion">
+                                <option selected value="">Choix d'une région</option>
+                                {% for region in listeRegion %}
+                                <option value="{{ region.nomRegion }}">{{ region.nomRegion }}</option>
+                                {% endfor %}
+                            </select>
+                            <select class="custom-select col-sm-4" id="selectVisiteur">
+                                <option selected value="">Choix d'un visiteur</option>
+                                {% for visiteurRegion in listeVisiteur %}
+                                    {% set visiteur = visiteurRegion.matricule.matricule %}
+                                    <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input type="text" class="form-control col-sm-4" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
+                        {% endif %}
                         <div class="input-group-append">
                             <button class="btn btn-success" id="recherche" type="button">Lancer la recherche</button>
                         </div>
@@ -226,13 +230,19 @@
                                 </thead>
                                 <tbody>
                                     {% for praticienRegion in listePraticien %}
-                                        {% set praticien = praticienRegion.getIdPraticiens %}
+                                        {% if is_granted('ROLE_RESPONSABLE') %}
+                                            {% set praticien = praticienRegion.getIdPraticiens %}
+                                            {% set nomRegion = praticienRegion.regCode.nomRegion %}
+                                        {% else %}
+                                            {% set praticien = praticienRegion %}
+                                            {% set nomRegion = listeRegion[0].regCode.nomRegion %}
+                                        {% endif %}
                                             <tr>
                                                 <td>{{ praticien.nom }}</td>
                                                 <td>{{ praticien.prenom }}</td>
                                                 <td></td>
                                                 <td>{{ praticien.notoriete }}</td>
-                                                <td>{{ praticienRegion.regCode.nomRegion }}</td>
+                                                <td>{{ nomRegion }}</td>
                                                 <td>{{ praticien.idSpecialite.nomSpecialite }}</td>
                                                 <td>{{ praticien.adresse }}</td>
                                                 <td>
@@ -278,7 +288,13 @@
                 var listeMarker = new Object();
 
                 {% for praticienRegion in listePraticien %}
-                    {% set praticien = praticienRegion.getIdPraticiens %}
+                    {% if is_granted('ROLE_RESPONSABLE') %}
+                        {% set praticien = praticienRegion.getIdPraticiens %}
+                        {% set nomRegion = praticienRegion.regCode.nomRegion %}
+                    {% else %}
+                        {% set praticien = praticienRegion %}
+                        {% set nomRegion = listeRegion[0].regCode.nomRegion %}
+                    {% endif %}
 
                     //On ajoute un marker à la map
                     listeMarker[{{praticien.idPraticiens}}] = L.marker([{{ praticien.latitude }} , {{ praticien.longitude }} ]).addTo(map);
@@ -294,7 +310,7 @@
                                 {% endfor %}
                             </select>
                         </td></tr>
-                        <tr><td style='text-align:left;' ><b>Région :</b> {{ praticienRegion.regCode.nomRegion }}</td></tr>
+                        <tr><td style='text-align:left;' ><b>Région :</b> {{ nomRegion }}</td></tr>
                     </table>
                     <hr>
                     <button type="button" name="{{praticien.idPraticiens}}" class="btn btn-warning btn-sm btn-block" data-toggle="modal" data-target="#modalModification"><i class="fas fa-pencil-alt"></i> Modifier</button>`;
@@ -393,7 +409,6 @@
                 });
 
                 $("a[href='#pills-carte']").on('shown.bs.tab', function(e) {
-                    console.log("test");
                     map.invalidateSize();
                 });
             } );
@@ -443,6 +458,7 @@
                                     <select class="form-control" name="region" id="modifRegion" required {% if not is_granted('ROLE_RESPONSABLE') %} disabled {% endif %}>
                                         <option value="" hidden>Choisissez une région</option>
                                         {% for region in listeRegion %}
+                                            {% if is_granted('ROLE_VISITEUR') %}{% set region = listeRegion[0].regCode %}{% endif %}
                                             <option value="{{ region.regCode}}">{{ region.nomRegion }}</option>
                                         {% endfor %}
                                     </select>
@@ -571,7 +587,13 @@
 
                     // On parcours la liste de tout les praticiens, et si c'est celui qu'on doit modifier , alors on les champs au valeurs correspondante
                     {% for praticienRegion in listePraticien %}
-                        {% set praticien = praticienRegion.getIdPraticiens %}
+                        {% if is_granted('ROLE_RESPONSABLE') %}
+                            {% set praticien = praticienRegion.getIdPraticiens %}
+                            {% set idRegion = praticienRegion.regCode.regCode %}
+                        {% else %}
+                            {% set praticien = praticienRegion %}
+                            {% set idRegion = listeRegion[0].regCode.regCode%}
+                        {% endif %}
                         
                         if(idPraticiens == '{{ praticien.idPraticiens }}' )
                         {
@@ -583,7 +605,7 @@
                             $('#modifLongitude').val('{{ praticien.longitude }}');
                             $('#modifLatitude').val('{{ praticien.latitude }}');
                             $('#modifSpecialite').val('{{ praticien.idSpecialite.idSpecialite }}');
-                            $('#modifRegion').val('{{ praticienRegion.regCode.regCode }}');
+                            $('#modifRegion').val('{{ idRegion }}');
 
                             // Si c'est un responsable alors , on coche les bonnes cases dans le multiselect, et si c'est un visiteur, on affiche seulement les visiteurs qui y sont liée
                             {% if is_granted('ROLE_RESPONSABLE') %}

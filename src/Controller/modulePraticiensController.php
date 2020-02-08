@@ -29,14 +29,13 @@
             //On recupère la liste des régions, la liste des spécialités
             $em = $this->getDoctrine()->getManager();
 
-            $listeRegion =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
             $listeSpec = $em->getRepository(Specialite::class)->findAll();
 
             //On récupère la liste des praticiens, si c'est un visiteur, tout ceux qui sont dans son portefeuille, et si c'est un responsable, tout les praticiens qui sont dans son secteur
             if($user->hasRole('ROLE_RESPONSABLE'))
             {
+                $listeRegion =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
                 $listePraticien = $em->getRepository(PraticiensRegion::class)->findBy(array('regCode' => array_column($listeRegion , "regCode") , 'active' => 1));
-
                 $listeVisiteur = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegion , "regCode") , 'active' => 1));
 
                 $html = $this->render('modulePraticiens/modulePraticiens.html.twig' , array(
@@ -44,6 +43,18 @@
                     'listeRegion' => $listeRegion,
                     'listePraticien' => $listePraticien,
                     'listeVisiteur' => $listeVisiteur,
+                    'listeSpec' => $listeSpec));
+                return $html;
+
+            } else if($user->hasRole('ROLE_VISITEUR'))
+            {
+                $listeRegion = $em->getRepository(VisiteurRegion::class)->findBy(array('matricule' => $user->getId() , 'active' => 1 ));
+                $listePraticien = $em->getRepository(Visiteur::class)->findOneBy(array('matricule' => $user->getId()))->getIdPraticiens();
+
+                $html = $this->render('modulePraticiens/modulePraticiens.html.twig' , array(
+                    'title' => 'Gestion des praticiens' ,
+                    'listeRegion' => $listeRegion,
+                    'listePraticien' => $listePraticien,
                     'listeSpec' => $listeSpec));
                 return $html;
             }
@@ -101,7 +112,7 @@
                 // On execute les requêtes qui ont été générer précédement
                 $entityManager->flush();
 
-                $this->addFlash('success', 'Vous avez créer un praticiens');
+                $this->addFlash('success', 'Vous avez créer le praticien ' . $data->get('Prenom') . ' ' . $data->get('nom'));
                 return $this->redirectToRoute('gestionPraticiens');
             }
         }
@@ -178,7 +189,7 @@
             $em->persist($praticien);
             $em->flush();
 
-            $this->addFlash('success', 'Vous avez bien modifier ce praticiens');
+            $this->addFlash('success', 'Vous avez bien modifier le praticien ' . $data->get('Prenom') . ' ' . $data->get('nom'));
             return $this->redirectToRoute('gestionPraticiens');
         }
 
