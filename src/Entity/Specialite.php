@@ -24,7 +24,7 @@ class Specialite
     /**
      * @var string
      *
-     * @ORM\Column(name="nom_specialite", type="string", length=50, nullable=false)
+     * @ORM\Column(name="nom_specialite", type="string", length=50, unique=true, nullable=false)
      */
     private $nomSpecialite;
 
