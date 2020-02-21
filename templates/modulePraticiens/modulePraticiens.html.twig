@@ -5,32 +5,42 @@
     <script src="https://cdn.jsdelivr.net/npm/places.js@1.17.1"></script>
 
         {# Système de recherche #}
-        <div class="input-group mb-3">
+        <div class="form-group row">
+            
             {% if is_granted('ROLE_RESPONSABLE') %}
-                <select class="custom-select col-sm-2 bg-warning text-dark" id="typeRecherche">
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <select class="custom-select bg-warning text-dark" id="typeRecherche">
                     <option selected value="multicritere">Recherche multicritère</option>
                     <option value="region">Recherche par région</option>
-                    <option value="visiteur">Recherche par visiteur</option>
                 </select>
-                <input type="text" class="form-control col-sm-4" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
-                <select class="custom-select col-sm-4" id="selectRegion">
+            </div>
+            {% endif %}
+
+            <div class="col-sm-4 mb-3 mb-sm-0">
+                <select class="custom-select" id="selectRegion">
                     <option selected value="">Choix d'une région</option>
                     {% for region in listeRegion %}
                     <option value="{{ region.nomRegion }}">{{ region.nomRegion }}</option>
                     {% endfor %}
                 </select>
-                <select class="custom-select col-sm-4" id="selectVisiteur">
-                    <option selected value="">Choix d'un visiteur</option>
-                    {% for visiteurRegion in listeVisiteur %}
-                        {% set visiteur = visiteurRegion.matricule.matricule %}
-                        <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
-                    {% endfor %}
-                </select>
-            {% else %}
-                <input type="text" class="form-control col-sm-4" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
-            {% endif %}
-            <div class="input-group-append">
-                <button class="btn btn-success" id="recherche" type="button">Lancer la recherche</button>
+                <input type="text" class="form-control" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
+            </div>
+
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <select class="custom-select" multiple="multiple" id="selectVisiteur">
+                {% for visiteurRegion in listeVisiteur %}
+                    {% set visiteur = visiteurRegion.matricule.matricule %}
+                    <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
+                {% endfor %}
+                </select>             
+            </div>
+            
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <button class="btn btn-success col-sm-12" id="recherche" type="button"><i class="fas fa-search"></i>&nbsp;&nbsp;&nbsp;Lancer la recherche</button>
+            </div>
+
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <button class="btn btn-danger col-sm-12" id="reset_recherche" type="button"><i class="fas fa-undo"></i>&nbsp;&nbsp;&nbsp;Reset la recherche</button>
             </div>
         </div>
 
@@ -39,14 +49,14 @@
         {# Barre de navigation #}
         <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active" id="pills-liste-tab" data-toggle="pill" href="#pills-liste" role="tab" aria-controls="pills-liste" aria-selected="true">Liste</a>
+                <a class="nav-link active" id="pills-liste-tab" data-toggle="pill" href="#pills-liste" role="tab" aria-controls="pills-liste" aria-selected="true"><i class="fas fa-table"></i>&nbsp;&nbsp;&nbsp;Liste</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" id="pills-carte-tab" data-toggle="pill" href="#pills-carte" role="tab" aria-controls="pills-carte" aria-selected="false">Carte</a>
+                <a class="nav-link" id="pills-carte-tab" data-toggle="pill" href="#pills-carte" role="tab" aria-controls="pills-carte" aria-selected="false"><i class="fas fa-map-marker-alt"></i>&nbsp;&nbsp;&nbsp;Carte</a>
             </li>
             {% if is_granted('ROLE_RESPONSABLE') %}
                 <li class="nav-item">
-                    <a class="nav-link" id="pills-ajouter-tab" data-toggle="pill" href="#pills-ajouter" role="tab" aria-controls="pills-ajouter" aria-selected="false">Création de praticiens</a>
+                    <a class="nav-link" id="pills-ajouter-tab" data-toggle="pill" href="#pills-ajouter" role="tab" aria-controls="pills-ajouter" aria-selected="false"><i class="fas fa-user-plus"></i>&nbsp;&nbsp;&nbsp;Création de praticiens</a>
                 </li>
             {% endif %}
         </ul>
@@ -264,6 +274,14 @@
         {# Script pour la partie de recherche #}
         <script type="text/javascript">
             $(document).ready(function() {
+                // Init pour le select à choix multiple
+                $('#selectVisiteur').multiselect(
+                {
+                    templates: {
+                        button: '<button type="button" class="btn btn-primary multiselect dropdown-toggle" data-toggle="dropdown">Choisissez un ou des visiteurs</button>'
+                        }
+                });
+
                 // Partie Carte
                 var map = L.map('pills-carte').setView([46.887176, 2.388973], 6);
 
@@ -344,31 +362,19 @@
                 );
 
                 //Partie de recherche
-                //On cache les selectes
+                //On cache les selecte
                 $('#selectRegion').hide();
-                $('#selectVisiteur').hide();
 
                 //On affiche le champ correspondant au type de recherche choisit
                 $('#typeRecherche').change(function()
                 {
-                    // Reset de la recheche passée
-                    dataTable.search("").draw();
-                    updateMap(dataTable.rows({search:'applied'}).data());        
-
                     if(this.value == 'region')
                     {
                         $('#selectRegion').show();
-                        $('#selectVisiteur').hide();
-                        $('#rechercheMulticritere').hide();
-                    } else if(this.value ==  'visiteur')
-                    {
-                        $('#selectRegion').hide();
-                        $('#selectVisiteur').show();
                         $('#rechercheMulticritere').hide();
                     } else if(this.value == 'multicritere')
                     {
                         $('#selectRegion').hide();
-                        $('#selectVisiteur').hide();
                         $('#rechercheMulticritere').show();
                     }
                 })
@@ -378,22 +384,43 @@
                 {
                     var typeRecherche = $('#typeRecherche').val();
                     
-                    if(typeRecherche == 'visiteur')
-                    {
-                        var visiteur = $('#selectVisiteur').val();
-                        dataTable.search(visiteur).draw();
-                    } else if(typeRecherche == 'region')
+                    if(typeRecherche == 'region')
                     {
                         var region = $('#selectRegion').val();
-                        dataTable.columns(4).search(region).draw();
+                        dataTable.columns(4).search(region);
                     } else if(typeRecherche == 'multicritere')
                     {
                         var str = $('#rechercheMulticritere').val();
-                        dataTable.search(str).draw();
+                        dataTable.search(str);
                     }
+
+                    // Pour chaque visiteur séléctionnée, on le cherche dans la colonne visiteur
+                    var listeVisiteur = ($('#selectVisiteur').val());
+                    
+                    var str_search = listeVisiteur.join("|");
+                    
+                    dataTable.columns(7).search(str_search, true , false);
+
+                    dataTable.draw();
 
                     //On met à jour les marqueurs sur la map
                     updateMap(dataTable.rows({search:'applied'}).data());                  
+                });
+
+                // Lors du clique sur le bouton de reset
+                $('#reset_recherche').click(function()
+                {
+                    // on vide tous les champs de recherche
+                    $('#selectRegion').val("");
+                    $('#rechercheMulticritere').val("");
+                    $('#selectVisiteur').multiselect('deselectAll', false);
+
+                    // on reset la recherche a NULL
+                    dataTable.search('');
+                    dataTable.columns(4).search('');
+                    dataTable.columns(7).search('').draw();
+
+                    updateMap(dataTable.rows({search:'applied'}).data());        
                 });
 
                 $("a[href='#pills-carte']").on('shown.bs.tab', function(e) {
