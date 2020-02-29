@@ -426,6 +426,12 @@
                 $("a[href='#pills-carte']").on('shown.bs.tab', function(e) {
                     map.invalidateSize();
                 });
+
+                //Lorsqu'on vient de créer un praticien on affiche seulement ce praticien
+                {% for idPraticien in app.flashes('info') %}
+                    dataTable.columns(11).search({{ idPraticien }});
+                    dataTable.draw();
+                {% endfor %}
             } );
         </script>
 

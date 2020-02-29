@@ -113,6 +113,7 @@
                 $entityManager->flush();
 
                 $this->addFlash('success', 'Vous avez créer le praticien ' . $data->get('Prenom') . ' ' . $data->get('nom'));
+                $this->addFlash('info', $praticien->getIdPraticiens());
                 return $this->redirectToRoute('gestionPraticiens');
             }
         }
