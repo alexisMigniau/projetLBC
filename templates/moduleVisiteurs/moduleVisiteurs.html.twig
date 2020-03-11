@@ -5,7 +5,7 @@
 
 		<div class="card shadow mb-4 ">
 			<a href="#collapseCardAjout" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseCardAjout">
-                <h6 class="m-0 font-weight-bold">Création d'une visite</h6>
+                <h6 class="m-0 font-weight-bold">Enregistrer une visite</h6>
             </a>
 
             <div class="collapse" id="collapseCardAjout">
@@ -23,7 +23,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text" id="date_visite">Date Visite</span>
                                     </div>
-                                    <input type="date" class="form-control" placeholder="Date Visite" aria-label="Date Visite" aria-describedby="date_visite" required>
+                                    <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" required>
                                 </div>
                             </div>
                         </div>
@@ -49,7 +49,7 @@
                                     <div class="input-group-prepend">
                                         <span class="input-group-text" id="visite_planifiee">Contrevisite</span>
                                     </div>
-                                    <input type="date" class="form-control" placeholder="Contrevisite" aria-label="Contrevisite" aria-describedby="visite_planifiee">
+                                    <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee">
                                 </div>
                             </div>
                             <div class="form-group col-md-3">
@@ -60,5 +60,26 @@
             	</div>
             </div>
 		</div>
+
+        <div class="card shadow mb-4">
+            <a href="#collapseCardRecherche" class="d-block card-header py-3" data-toggle="collapse" role="button" aria-expanded="false" aria-controls="collapseCardRecherche">
+                <h6 class="m-0 font-weight-bold">Liste des visites</h6>
+            </a>
+
+            <div class="collapse" id="collapseCardRecherche">
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        {% if is_granted('ROLE_RESPONSABLE') %}
+                            <select class="custom-select col-sm-4" id="selectRegion">
+                                <option selected value="">Choix d'un visiteur</option>
+                                {% for visiteur in listeNomsVisiteurs %}
+                                    <option value="{{ visiteur.nom }}">{{ visiteur.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
 {% endblock %}
