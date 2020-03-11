@@ -13,6 +13,7 @@
     use App\Entity\Specialite;
     use App\Entity\Praticiens;
     use App\Entity\PraticiensRegion;
+    use App\Entity\Visiteur;
     use App\Entity\Visite;
 	
 	/**
@@ -32,12 +33,14 @@
 
             if ($user->hasRole('ROLE_RESPONSABLE'))
             {
+                $listePraticiens = $em->getRepository(Praticiens::class)->findAll();
                 $listeRegions =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
                 $listeVisiteurs = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
                 $listeNomsVisiteurs = $em->getRepository(Profil::class)->findBy(array('id' => array_column($listeVisiteurs, "matricule")));
 
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
                     'title' => 'Gestion des visites',
+                    'listePraticiens' => $listePraticiens,
                     'listeRegions' => $listeRegions,
                     'listeVisiteurs' => $listeVisiteurs,
                     'listeNomsVisiteurs' => $listeNomsVisiteurs
@@ -56,26 +59,28 @@
     	}
 
         /**
-         * @Route("/", name="creationVisite")
+         * @Route("/creationVisite", name="creationVisite", methods={"POST"})
          */
-        public function creationVisite()
+        public function creationVisite(Request $request)
         {
             $user = $this->getUser();
 
             if($user->hasRole('ROLE_RESPONSABLE'))
             {
-                echo "toto";
                 $entityManager = $this->getDoctrine()->getManager();
                 $data = $request->request;
 
-                $visite = new Visite();
+                $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('id_praticien')));
+                
+                $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('matricule')));
 
-                $visite->setIdPraticien($data->get('id_praticien'));
-                $visite->setMatricule($data->get('matricule'));
-                $visite->setDateVisite($data->get('date_visite'));
+                $visite = new Visite();
+                $visite->setIdPraticiens($praticien);
+                $visite->setMatricule($visiteur);
+                $visite->setDateVisite(new \DateTime($data->get('date_visite')));
                 $visite->setMotif($data->get('motif'));
                 $visite->setConvaincu($data->get('convaincu'));
-                $visite->setVisitePlanifiee($data->get('contre_visite'));
+                $visite->setVisitePlanifie(new \DateTime($data->get('contre_visite')));
 
                 $entityManager->persist($visite);
                 $entityManager->flush();
