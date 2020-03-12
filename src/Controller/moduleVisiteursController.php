@@ -36,22 +36,29 @@
                 $listePraticiens = $em->getRepository(Praticiens::class)->findAll();
                 $listeRegions =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
                 $listeVisiteurs = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
-                $listeNomsVisiteurs = $em->getRepository(Profil::class)->findBy(array('id' => array_column($listeVisiteurs, "matricule")));
+                $listeVisites = $em->getRepository(Visite::class)->findAll();
+                //$listeVisites = $em->getRepository(Visite::class)->findBy(array_column($listeVisiteurs, "matricule")));
 
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
                     'title' => 'Gestion des visites',
                     'listePraticiens' => $listePraticiens,
                     'listeRegions' => $listeRegions,
                     'listeVisiteurs' => $listeVisiteurs,
-                    'listeNomsVisiteurs' => $listeNomsVisiteurs
+                    'listeVisites' => $listeVisites
                 ));
 
                 return $html;
 
-            } else 
+            } else if ($user->hasRole('ROLE_VISITEUR'))
             {
+                $listeVisites = $em->getRepository(Visite::class)->findBy(array('matricule' => $user->getId()));
+                $listePraticiens = $em->getRepository(Visiteur::class)->findOneBy(array('matricule' => $user->getId()))->getIdPraticiens();
+
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
-                    'title' => 'Gestion des visites'
+                    'title' => 'Gestion des visites',
+                    'listePraticiens' => $listePraticiens,
+                    'listeVisites' => $listeVisites,
+                    'matricule' => $user->getId()
                 ));
 
                 return $html;
@@ -70,9 +77,9 @@
                 $entityManager = $this->getDoctrine()->getManager();
                 $data = $request->request;
 
-                $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('id_praticien')));
+                $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
                 
-                $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('matricule')));
+                $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('visiteur')));
 
                 $visite = new Visite();
                 $visite->setIdPraticiens($praticien);

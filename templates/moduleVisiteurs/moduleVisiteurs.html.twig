@@ -13,21 +13,27 @@
             		<form class="user" method="POST" action="{{ path('creationVisite') }}" autocomplete="off">
             			<div class="form-group row">
                             <div class="form-group col-md-3">
-                                <select class="custom-select col-sm-12" id="id_praticien">
+                                <select class="custom-select col-sm-12" id="praticien" name="praticien">
                                     <option selected value="">Sélectionner un praticien</option>
                                     {% for praticien in listePraticiens %}
-                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }} - {{ praticien.idPraticiens }}</option>
+                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="form-group col-md-3">
-                                <select class="custom-select col-sm-12" id="matricule">
-                                    <option selected value="">Sélectionner un visiteur</option>
-                                    {% for visiteurRegion in listeVisiteurs %}
-                                        {% set visiteur = visiteurRegion.matricule.matricule %}
-                                        <option value="{{ visiteur.Id }}">{{ visiteur.prenom }} {{ visiteur.nom }} - {{ visiteur.Id }}</option>
-                                    {% endfor %}
-                                </select>
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    <select class="custom-select col-sm-12" id="visiteur" name="visiteur">
+                                        <option selected value="">Sélectionner un visiteur</option>
+                                        {% for visiteurRegion in listeVisiteurs %}
+                                            {% set visiteur = visiteurRegion.matricule.matricule %}
+                                            <option value="{{ visiteur.Id }}">{{ visiteur.prenom }} {{ visiteur.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <select class="custom-select col-sm-12" id="visiteur" name="visiteur">
+                                        <option selected value="{{ matricule }}">{{ matricule }}</option>
+                                    </select>
+                                {% endif %}
                             </div>
                             <div class="form-group col-md-3">
                                 <div class="input-group mb-3">
@@ -49,7 +55,7 @@
                         <div class="form-group row">
                             <div class="form-group col-md-3">
                                 <div class="custom-control custom-checkbox">
-                                    <input type="checkbox" class="custom-control-input" id="convaincu">
+                                    <input type="checkbox" class="custom-control-input" id="convaincu" name="convaincu">
                                     <label class="custom-control-label" for="convaincu">Convaincu</label>
                                 </div>
                             </div>
@@ -79,16 +85,56 @@
 
             <div class="collapse" id="collapseCardRecherche">
                 <div class="card-body">
-                    <div class="input-group mb-3">
-                        {% if is_granted('ROLE_RESPONSABLE') %}
-                            <select class="custom-select col-sm-4" id="selectVisiteur">
-                                <option selected value="">Choix d'un visiteur</option>
-                                {% for visiteurRegion in listeVisiteurs %}
-                                    {% set visiteur = visiteurRegion.matricule.matricule %}
-                                    <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
-                                {% endfor %}
-                            </select>
-                        {% endif %}
+                    {% if is_granted('ROLE_RESPONSABLE') %}
+                        <div class="form-group row">
+                            <div class="form-group col-md-3">
+                                <select class="custom-select" id="selectVisiteur">
+                                    <option selected value="">Choix d'un visiteur</option>
+                                    {% for visiteurRegion in listeVisiteurs %}
+                                        {% set visiteur = visiteurRegion.matricule.matricule %}
+                                        <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <button type="button" class="btn btn-success">Rechercher</button>
+                            </div>
+                        </div>
+                    {% endif %}
+                    <div class="tab-content" id="pills-tabContent">
+                        <div class="tab-pane fade show active" id="pills-liste" role="tabpanel" aria-labelledby="pills-liste-tab">
+                            <table id="listePraticien" style="width:100%;" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>ID Visite</th>
+                                        <th>Praticien</th>
+                                        <th>Visiteur</th>
+                                        <th>Date de la visite</th>
+                                        <th>Convaincu</th>
+                                        <th>Contre Visite</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for visite in listeVisites %}
+                                        <tr>
+                                            <td>{{ visite.idVisite }}</td>
+                                            <td>{{ visite.idPraticiens.prenom }} {{ visite.idPraticiens.nom }}</td>
+                                            <td>{{ visite.matricule.matricule.prenom }} {{ visite.matricule.matricule.nom }}</td>
+                                            <td>{{ visite.dateVisite|date('d/m/Y') }}</td>
+                                            <td>
+                                                {% if visite.convaincu == 1 %}Oui{% else %}Non{% endif %}
+                                            </td>
+                                            <td>{{ visite.visitePlanifie|date('d/m/Y') }}</td>
+                                            <td>
+                                                <button type="button" name="modif_{{visite.idVisite}}" class="btn btn-warning btn-sm btn-block" data-toggle="modal" data-target="#modalModification"><i class="fas fa-pencil-alt"></i> Modifier</button>
+                                                <button type="button" name="suppr_{{visite.idVisite}}" class="btn btn-danger btn-sm btn-block"><i class="fas fa-times"></i> Supprimer</button>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
