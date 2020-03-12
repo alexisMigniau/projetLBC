@@ -36,9 +36,19 @@
                 $listePraticiens = $em->getRepository(Praticiens::class)->findAll();
                 $listeRegions =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
                 $listeVisiteurs = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
-                $listeVisites = $em->getRepository(Visite::class)->findAll();
-                //$listeVisites = $em->getRepository(Visite::class)->findBy(array_column($listeVisiteurs, "matricule")));
 
+                // Ducoup cela ne marchait pas car dans $listeVisiteurs tu as des objets de type VisiteurRegion car c'est le repository que l'on utilise
+                // Et sur ta fonction qui devait recuperer les visites , vu que l'attribut matricule dans la table Visite est de type Visiteur et non VisiteurRegion il ne trouvait rien
+
+                // On crée un tableau vide ou on va ajouter chaque objet Visiteurs
+                $listeVisiteursTmp = array();
+
+                //On parcours la liste de tous les visiteurs et on ajoute l'objet dans notre tableau
+                foreach($listeVisiteurs as $visiteur)
+                    array_push($listeVisiteursTmp , $visiteur->getMatricule());
+
+                $listeVisites = $em->getRepository(Visite::class)->findBy(array("matricule" => $listeVisiteursTmp));
+                
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
                     'title' => 'Gestion des visites',
                     'listePraticiens' => $listePraticiens,
