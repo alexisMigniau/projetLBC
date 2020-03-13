@@ -15,7 +15,8 @@
                             <div class="form-group col-md-3">
                                 <select class="custom-select col-sm-12" id="praticien" name="praticien">
                                     <option selected value="">Sélectionner un praticien</option>
-                                    {% for praticien in listePraticiens %}
+                                    {% for praticienRegion in listePraticiens %}
+                                        {% set praticien = praticienRegion.idPraticiens %}
                                         <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
                                     {% endfor %}
                                 </select>
@@ -85,7 +86,7 @@
 
             <div class="collapse" id="collapseCardRecherche">
                 <div class="card-body">
-                    {% if is_granted('ROLE_RESPONSABLE') %}
+                    {# {% if is_granted('ROLE_RESPONSABLE') %}
                         <div class="form-group row">
                             <div class="form-group col-md-3">
                                 <select class="custom-select" id="selectVisiteur">
@@ -100,10 +101,10 @@
                                 <button type="button" class="btn btn-success">Rechercher</button>
                             </div>
                         </div>
-                    {% endif %}
+                    {% endif %} #}
                     <div class="tab-content" id="pills-tabContent">
                         <div class="tab-pane fade show active" id="pills-liste" role="tabpanel" aria-labelledby="pills-liste-tab">
-                            <table id="listePraticien" style="width:100%;" class="table table-bordered">
+                            <table id="listeVisites" style="width:100%;" class="table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>ID Visite</th>
@@ -127,8 +128,9 @@
                                             </td>
                                             <td>{{ visite.visitePlanifie|date('d/m/Y') }}</td>
                                             <td>
-                                                <button type="button" name="modif_{{visite.idVisite}}" class="btn btn-warning btn-sm btn-block" data-toggle="modal" data-target="#modalModification"><i class="fas fa-pencil-alt"></i> Modifier</button>
-                                                <button type="button" name="suppr_{{visite.idVisite}}" class="btn btn-danger btn-sm btn-block"><i class="fas fa-times"></i> Supprimer</button>
+                                                <button type="button" name="{{visite.idVisite}}" class="btn btn-primary btn-sm btn-block" data-toggle="modal" data-target="#modalPDF"><i class="far fa-file"></i> Compte Rendu</button>
+                                                <button type="button" name="{{visite.idVisite}}" class="btn btn-warning btn-sm btn-block" data-toggle="modal" data-target="#modalModification"><i class="fas fa-pencil-alt"></i> Modifier</button>
+                                                <button type="button" name="{{visite.idVisite}}" class="btn btn-danger btn-sm btn-block"><i class="fas fa-times"></i> Supprimer</button>
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -138,6 +140,195 @@
                     </div>
                 </div>
             </div>
+
+            <script type="text/javascript">
+
+                var dataTable = $('#listeVisites').DataTable(
+                    {
+                        "searching":true,
+                        "dom": "ltipr",
+                        "language": 
+                        {
+                            "url" : "https://cdn.datatables.net/plug-ins/1.10.20/i18n/French.json"
+                        }
+                    }
+                );
+
+            </script>
+
+            <div class="modal fade" id="modalModification" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="exampleModalLabel">Modification d'une visite</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form class="user" method="POST" action="{{ path('modificationVisite') }}" autocomplete="off">
+                        <div class="modal-body">
+                            <div class="form-group row">
+                            <div class="form-group col-md-3">
+                                <input name="id" id="modifId" type="hidden">
+                                <select class="custom-select col-sm-12" id="modifPraticien" name="praticien">
+                                    <option selected value="">Sélectionner un praticien</option>
+                                    {% for praticienRegion in listePraticiens %}
+                                        {% set praticien = praticienRegion.idPraticiens %}
+                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group col-md-3">
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    <select class="custom-select col-sm-12" id="modifVisiteur" name="visiteur">
+                                        <option selected value="">Sélectionner un visiteur</option>
+                                        {% for visiteurRegion in listeVisiteurs %}
+                                            {% set visiteur = visiteurRegion.matricule.matricule %}
+                                            <option value="{{ visiteur.Id }}">{{ visiteur.prenom }} {{ visiteur.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <select class="custom-select col-sm-12" id="modifVisiteur" name="visiteur">
+                                        <option selected value="{{ matricule }}">{{ matricule }}</option>
+                                    </select>
+                                {% endif %}
+                            </div>
+                            <div class="form-group col-md-3">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="date_visite">Date Visite</span>
+                                    </div>
+                                    <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" id="modifDatevisite" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="input-group col-md-9">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Motif</span>
+                                </div>
+                                <input type="textarea" class="form-control" aria-label="Motif" name="motif" id="modifMotif" />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="form-group col-md-3">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="modifConvaincu" name="convaincu">
+                                    <label class="custom-control-label" for="convaincu">Convaincu</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="form-group col-md-3">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text" id="visite_planifiee">Contrevisite</span>
+                                    </div>
+                                    <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee" id="modifContrevisite" />
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                                <input type="submit" class="btn btn-success" value="Modifier la visite" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="modalPDF" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="exampleModalLabel">Compte rendu de la visite</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body" id="modalPDF-body">
+                            <div class="modal-group col-md-4">
+                                <u><h5 id="recapId">Visite n°</h5></u><br>
+                                <p id="recapPraticien">Praticien  : </p>
+                                <p id="recapVisiteur">Visiteur : </p>
+                                <p id="recapDatevisite">Date de la visite : </p>
+                                <p id="recapMotif">Motif : </p>
+                                <p id="recapConvaincu">Convaincu : </p>
+                                <p id="recapContrevisite">Contre visite : </p>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                            <button type="button" class="btn btn-primary">Reçevoir par mail</button>
+                            <button type="button" class="btn btn-success">Télécharger le PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <script type="text/javascript">
+
+                $('#modalModification').on('show.bs.modal', function (e)
+                {
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+                        
+                        if(idVisite == '{{ visite.idVisite }}' )
+                        {   
+                            $('#modifId').val('{{ visite.idVisite }}');
+                            $('#modifPraticien').val('{{ visite.idPraticiens.idPraticiens }}');
+                            $('#modifVisiteur').val('{{ visite.matricule.matricule.id }}');
+                            $('#modifDatevisite').val('{{ visite.dateVisite|date("Y-m-d") }}');
+                            $('#modifMotif').val('{{ visite.motif }}');
+                            {% if visite.convaincu == 1 %}
+                                $('#modifConvaincu').prop('checked', true);
+                            {% else %}
+                                $('#modifConvaincu').prop('checked', false);
+                            {% endif %}
+                            $('#modifContrevisite').val('{{ visite.visitePlanifie|date("Y-m-d") }}');
+                        }
+
+                    {% endfor %}
+                });
+
+                $('#modalPDF').on('show.bs.modal', function (e)
+                {
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+                        
+                        if(idVisite == '{{ visite.idVisite }}' )
+                        {   
+                            $('#recapId').append('{{ visite.idVisite }}');
+                            $('#recapPraticien').append('{{ visite.idPraticiens.prenom }} ');
+                            $('#recapPraticien').append('{{ visite.idPraticiens.nom }}');
+                            $('#recapVisiteur').append('{{ visite.matricule.matricule.prenom }} ');
+                            $('#recapVisiteur').append('{{ visite.matricule.matricule.nom }}');
+                            $('#recapDatevisite').append('{{ visite.dateVisite|date("d/m/Y") }}');
+                            $('#recapMotif').append('{{ visite.motif }}');
+                            {% if visite.convaincu == 1 %}
+                                $('#recapConvaincu').append('Oui');
+                            {% else %}
+                                $('#recapConvaincu').append('Non');
+                            {% endif %}
+                            $('#recapContrevisite').append('{{ visite.visitePlanifie|date("d/m/Y") }}');
+                        }
+
+                    {% endfor %}
+                });
+
+                $("#modalPDF").on("hidden.bs.modal", function(){
+                    var html = '<div class="modal-group col-md-4"><u><h5 id="recapId">Visite n°</h5></u><br><p id="recapPraticien">Praticien  : </p><p id="recapVisiteur">Visiteur : </p><p id="recapDatevisite">Date de la visite : </p><p id="recapMotif">Motif : </p><p id="recapConvaincu">Convaincu : </p><p id="recapContrevisite">Contre visite : </p></div>';
+                    $("#modalPDF-body").html(html);
+                });
+
+            </script>
+
         </div>
 
 {% endblock %}

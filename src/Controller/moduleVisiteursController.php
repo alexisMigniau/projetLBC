@@ -29,13 +29,13 @@
     	{
             $user = $this->getUser();
 
-            $em = $this->getDoctrine()->getManager();
+            $entityManager = $this->getDoctrine()->getManager();
 
             if ($user->hasRole('ROLE_RESPONSABLE'))
             {
-                $listePraticiens = $em->getRepository(Praticiens::class)->findAll();
-                $listeRegions =  $em->getRepository(Region::class)->getRegionsByResponsable($user->getId());
-                $listeVisiteurs = $em->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
+                $listeRegions =  $entityManager->getRepository(Region::class)->getRegionsByResponsable($user->getId());
+                $listePraticiens = $entityManager->getRepository(PraticiensRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
+                $listeVisiteurs = $entityManager->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
 
                 // Ducoup cela ne marchait pas car dans $listeVisiteurs tu as des objets de type VisiteurRegion car c'est le repository que l'on utilise
                 // Et sur ta fonction qui devait recuperer les visites , vu que l'attribut matricule dans la table Visite est de type Visiteur et non VisiteurRegion il ne trouvait rien
@@ -47,7 +47,7 @@
                 foreach($listeVisiteurs as $visiteur)
                     array_push($listeVisiteursTmp , $visiteur->getMatricule());
 
-                $listeVisites = $em->getRepository(Visite::class)->findBy(array("matricule" => $listeVisiteursTmp));
+                $listeVisites = $entityManager->getRepository(Visite::class)->findBy(array("matricule" => $listeVisiteursTmp));
                 
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
                     'title' => 'Gestion des visites',
@@ -61,8 +61,8 @@
 
             } else if ($user->hasRole('ROLE_VISITEUR'))
             {
-                $listeVisites = $em->getRepository(Visite::class)->findBy(array('matricule' => $user->getId()));
-                $listePraticiens = $em->getRepository(Visiteur::class)->findOneBy(array('matricule' => $user->getId()))->getIdPraticiens();
+                $listeVisites = $entityManager->getRepository(Visite::class)->findBy(array('matricule' => $user->getId()));
+                $listePraticiens = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $user->getId()))->getIdPraticiens();
 
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
                     'title' => 'Gestion des visites',
@@ -82,29 +82,51 @@
         {
             $user = $this->getUser();
 
-            if($user->hasRole('ROLE_RESPONSABLE'))
-            {
-                $entityManager = $this->getDoctrine()->getManager();
-                $data = $request->request;
+            $entityManager = $this->getDoctrine()->getManager();
+            $data = $request->request;
 
-                $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
-                
-                $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('visiteur')));
+            $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
+            $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('visiteur')));
 
-                $visite = new Visite();
-                $visite->setIdPraticiens($praticien);
-                $visite->setMatricule($visiteur);
-                $visite->setDateVisite(new \DateTime($data->get('date_visite')));
-                $visite->setMotif($data->get('motif'));
-                $visite->setConvaincu($data->get('convaincu'));
-                $visite->setVisitePlanifie(new \DateTime($data->get('contre_visite')));
+            $visite = new Visite();
+            $visite->setIdPraticiens($praticien);
+            $visite->setMatricule($visiteur);
+            $visite->setDateVisite(new \DateTime($data->get('date_visite')));
+            $visite->setMotif($data->get('motif'));
+            $visite->setConvaincu($data->get('convaincu'));
+            $visite->setVisitePlanifie(new \DateTime($data->get('contre_visite')));
 
-                $entityManager->persist($visite);
-                $entityManager->flush();
+            $entityManager->persist($visite);
+            $entityManager->flush();
 
-                return $this->redirectToRoute('gestionVisite');
-            }
-            
+            return $this->redirectToRoute('gestionVisite');
+        }
+
+        /**
+         * @Route("/modificationVisite", name="modificationVisite", methods={"POST"})
+         */
+        public function modificationVisite(Request $request)
+        {
+            $user = $this->getUser();
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $data = $request->request;
+
+            $visite =  $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
+            $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
+            $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('visiteur')));
+
+            $visite->setIdPraticiens($praticien);
+            $visite->setMatricule($visiteur);
+            $visite->setDateVisite(new \DateTime($data->get('date_visite')));
+            $visite->setMotif($data->get('motif'));
+            $visite->setConvaincu($data->get('convaincu'));
+            $visite->setVisitePlanifie(new \DateTime($data->get('contre_visite')));
+
+            $entityManager->persist($visite);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('gestionVisite');
         }
     }
 
