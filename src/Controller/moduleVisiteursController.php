@@ -7,6 +7,9 @@
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\HttpFoundation\JsonResponse;
 
+    use Dompdf\Dompdf;
+    use Dompdf\Options;
+
     use App\Entity\Region;
     use App\Entity\Profil;
     use App\Entity\VisiteurRegion;
@@ -15,6 +18,8 @@
     use App\Entity\PraticiensRegion;
     use App\Entity\Visiteur;
     use App\Entity\Visite;
+    use App\Entity\Medicament;
+    use App\Entity\Offrir;
 	
 	/**
     * @Route("/gestionVisite")
@@ -34,11 +39,9 @@
             if ($user->hasRole('ROLE_RESPONSABLE'))
             {
                 $listeRegions =  $entityManager->getRepository(Region::class)->getRegionsByResponsable($user->getId());
+                $listeMedicament = $entityManager->getRepository(Medicament::class)->findAll();
                 $listePraticiens = $entityManager->getRepository(PraticiensRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
                 $listeVisiteurs = $entityManager->getRepository(VisiteurRegion::class)->findBy(array('regCode' => array_column($listeRegions , "regCode") , 'active' => 1));
-
-                // Ducoup cela ne marchait pas car dans $listeVisiteurs tu as des objets de type VisiteurRegion car c'est le repository que l'on utilise
-                // Et sur ta fonction qui devait recuperer les visites , vu que l'attribut matricule dans la table Visite est de type Visiteur et non VisiteurRegion il ne trouvait rien
 
                 // On crée un tableau vide ou on va ajouter chaque objet Visiteurs
                 $listeVisiteursTmp = array();
@@ -54,7 +57,8 @@
                     'listePraticiens' => $listePraticiens,
                     'listeRegions' => $listeRegions,
                     'listeVisiteurs' => $listeVisiteurs,
-                    'listeVisites' => $listeVisites
+                    'listeVisites' => $listeVisites,
+                    'listeMedicament' => $listeMedicament
                 ));
 
                 return $html;
@@ -63,12 +67,14 @@
             {
                 $listeVisites = $entityManager->getRepository(Visite::class)->findBy(array('matricule' => $user->getId()));
                 $listePraticiens = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $user->getId()))->getIdPraticiens();
+                $listeMedicament = $entityManager->getRepository(Medicament::class)->findAll();
 
                 $html = $this->render('moduleVisiteurs/moduleVisiteurs.html.twig', array(
                     'title' => 'Gestion des visites',
                     'listePraticiens' => $listePraticiens,
                     'listeVisites' => $listeVisites,
-                    'matricule' => $user->getId()
+                    'matricule' => $user->getId(),
+                    'listeMedicament' => $listeMedicament
                 ));
 
                 return $html;
@@ -96,6 +102,19 @@
             $visite->setConvaincu($data->get('convaincu'));
             $visite->setVisitePlanifie(new \DateTime($data->get('contre_visite')));
 
+            for ($i=1; $i <= $data->get('nbMedicaments'); $i++)
+            { 
+                $numMedicament = "medicament".$i;
+                $$numMedicament = $entityManager->getRepository(Medicament::class)->findOneBy(array('idMedicament' => $data->get('medicament'.$i)));
+                $visite->addIdMedicament($$numMedicament);
+
+                $offrir = new Offrir();
+                $offrir->setIdVisite($visite);
+                $offrir->setIdMedicament($$numMedicament);
+                $offrir->setQuantiteEchantillon($data->get('quantite'.$i));
+                $entityManager->persist($offrir); 
+            }
+
             $entityManager->persist($visite);
             $entityManager->flush();
 
@@ -112,7 +131,7 @@
             $entityManager = $this->getDoctrine()->getManager();
             $data = $request->request;
 
-            $visite =  $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
+            $visite = $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
             $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
             $visiteur = $entityManager->getRepository(Visiteur::class)->findOneBy(array('matricule' => $data->get('visiteur')));
 
@@ -123,10 +142,104 @@
             $visite->setConvaincu($data->get('convaincu'));
             $visite->setVisitePlanifie(new \DateTime($data->get('contre_visite')));
 
+            $visite->clearMedicamentOffrir();
+
+            $listeOffrirASupprimer = $entityManager->getRepository(Offrir::class)->findBy(array('idVisite' => $visite));
+
+            foreach ($listeOffrirASupprimer as $offrirASupprimer)
+            {
+                $entityManager->remove($offrirASupprimer);
+                $entityManager->flush();
+            }
+
+            for ($i=1; $i <= $data->get('nbMedicaments'); $i++) { 
+                $numMedicament = "medicament".$i;
+                $$numMedicament = $entityManager->getRepository(Medicament::class)->findOneBy(array('idMedicament' => $data->get('medicament'.$i)));
+                if (isset($$numMedicament)) 
+                {
+                    $visite->addIdMedicament($$numMedicament);
+                    $offrir = new Offrir();
+                    $offrir->setIdVisite($visite);
+                    $offrir->setIdMedicament($$numMedicament);
+                    $offrir->setQuantiteEchantillon($data->get('quantite'.$i));
+                    $entityManager->persist($offrir); 
+                }
+            }
+
             $entityManager->persist($visite);
             $entityManager->flush();
 
             return $this->redirectToRoute('gestionVisite');
+        }
+
+        /**
+         * @Route("/suppressionVisite", name="suppressionVisite", methods={"POST"})
+         */
+        public function suppressionVisite(Request $request)
+        {
+            $entityManager = $this->getDoctrine()->getManager();
+            $data = $request->request;
+
+            $visite = $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
+
+            $entityManager->remove($visite);
+            $entityManager->flush();
+
+            return $this->redirectToRoute('gestionVisite');
+        }
+
+        /**
+         * @Route("/genererPdf", name="genererPdf", methods={"POST"})
+         */
+        public function genererPdf(Request $request)
+        {
+            $data = $request->request;
+
+            $entityManager = $this->getDoctrine()->getManager();
+
+            $visite = $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
+            $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
+            $visiteur = $entityManager->getRepository(Profil::class)->findOneBy(array('id' => $data->get('visiteur')));
+
+            if ($data->get('convaincu') == "on") 
+                {   $convaincu = "Oui";  }
+            else {  $convaincu = "Non";  }
+
+            $infosVisite = array(
+                'visite' => $visite,
+                'idVisite' => $data->get('id'),
+                'prenomPraticien' => $praticien->getPrenom(),
+                'nomPraticien' => $praticien->getNom(),
+                'prenomVisiteur' => $visiteur->getPrenom(),
+                'nomVisiteur' => $visiteur->getNom(),
+                'dateVisite' => date('d/m/Y', strtotime($data->get('date_visite'))),
+                'contreVisite' => date('d/m/Y', strtotime($data->get('contre_visite'))),
+                'motif' => $data->get('motif'),
+                'convaincu' => $convaincu,
+                'nbMedicaments' => $data->get('nbMedicaments')
+            );
+
+            for ($i=1; $i <= $data->get('nbMedicaments'); $i++)
+            { 
+                $numMedicament = "medicament".$i;
+                $$numMedicament = $entityManager->getRepository(Medicament::class)->findOneBy(array('idMedicament' => $data->get('medicament'.$i)));
+
+                $infosVisite = array_merge($infosVisite, array("medicament".$i => $$numMedicament->getNomMedicament()));
+                array_merge($infosVisite, array("quantite".$i => $data->get('quantite'.$i)));
+            }
+
+            $html = $this->renderView('moduleVisiteurs/compterendupdf.html.twig', $infosVisite);
+            
+            $pdfOptions = new Options();
+            $pdfOptions->set('defaultFont', 'Arial');
+            $compteRenduPdf = new Dompdf($pdfOptions);
+            $compteRenduPdf->loadHtml($html);
+            $compteRenduPdf->setPaper('A4', 'portrait');
+            $compteRenduPdf->render();
+
+            $nomFichier = "compte_rendu_". $data->get('id');
+
+            return new Response($compteRenduPdf->stream($nomFichier));
         }
     }
 
