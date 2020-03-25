@@ -38,7 +38,7 @@ class Fichefrais
     /**
      * @var string
      *
-     * @ORM\Column(name="pdf", type="string", length=255, nullable=false)
+     * @ORM\Column(name="pdf", type="string", length=255, nullable=true)
      */
     private $pdf;
 
@@ -79,6 +79,32 @@ class Fichefrais
         $this->etat = $etat;
 
         return $this;
+    }
+
+    public function getLibelleEtat()
+    {
+        switch($this->etat == 0)
+        {
+            case 0:
+                return "Crée";
+            break;
+
+            case 1:
+                return "Cloturée";
+            break;
+
+            case 2:
+                return "Validée";
+            break;
+
+            case 3:
+                return "Mise en paiement";
+            break;
+
+            case 4:
+                return "Remboursée";
+            break;
+        } 
     }
 
     public function getPdf(): ?string
