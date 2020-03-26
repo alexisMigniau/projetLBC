@@ -98,12 +98,20 @@ class Praticiens
     private $matricule;
 
     /**
+     *  @var \Doctrine\Common\Collections\Collection
+     * 
+     * @ORM\OneToMany(targetEntity="App\Entity\Visite", mappedBy="idPraticiens", orphanRemoval=true)
+     */
+    private $visites;
+
+    /**
      * Constructor
      */
     public function __construct()
     {
         $this->idAc = new \Doctrine\Common\Collections\ArrayCollection();
         $this->matricule = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->visites = new ArrayCollection();
     }
 
     public function getIdPraticiens(): ?int
@@ -250,6 +258,52 @@ class Praticiens
     public function setAdresse(string $adresse): self
     {
         $this->adresse = $adresse;
+
+        return $this;
+    }
+
+    public function getVisites(): Collection
+    {
+        return $this->visites;
+    }
+
+    public function getDerniereVisite()
+    {
+        if($this->visites->get(0) != null)
+        {
+            $dateRef = $this->visites->get(0)->getDateVisite();
+
+            foreach($this->visites as $visite)
+            {
+                if($dateRef < $visite->getDateVisite())
+                    $dateRef = $visite->getDateVisite();
+            }
+
+            return $dateRef;
+        }      
+        else
+            return null;
+    }
+
+    public function addVisite(Visite $visite): self
+    {
+        if (!$this->visites->contains($visite)) {
+            $this->visites[] = $visite;
+            $visite->setPraticiens($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVisite(Visite $visite): self
+    {
+        if ($this->visites->contains($visite)) {
+            $this->visites->removeElement($visite);
+            // set the owning side to null (unless already changed)
+            if ($visite->getPraticiens() === $this) {
+                $visite->setPraticiens(null);
+            }
+        }
 
         return $this;
     }

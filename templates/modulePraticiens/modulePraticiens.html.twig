@@ -93,7 +93,7 @@
                                 <tr style="font-weight: 600;">
                                     <td>{{ praticien.nom }}</td>
                                     <td>{{ praticien.prenom }}</td>
-                                    <td>{{ "now"|date("d/m/Y") }}</td>
+                                    <td>{% if praticien.getDerniereVisite != NULL %}{{ praticien.getDerniereVisite|date("d/m/Y") }}{% else %}Pas de visite{% endif %}</td>
                                     <td>{{ praticien.notoriete }}</td>
                                     <td>{{ nomRegion }}</td>
                                     <td>{{ praticien.idSpecialite.nomSpecialite }}</td>
