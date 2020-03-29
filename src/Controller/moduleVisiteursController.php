@@ -6,6 +6,8 @@
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\HttpFoundation\JsonResponse;
+    use Symfony\Component\Mailer\MailerInterface;
+    use Symfony\Component\Mime\Email;
 
     use Dompdf\Dompdf;
     use Dompdf\Options;
@@ -13,7 +15,6 @@
     use App\Entity\Region;
     use App\Entity\Profil;
     use App\Entity\VisiteurRegion;
-    use App\Entity\Specialite;
     use App\Entity\Praticiens;
     use App\Entity\PraticiensRegion;
     use App\Entity\Visiteur;
@@ -74,6 +75,8 @@
                     'listePraticiens' => $listePraticiens,
                     'listeVisites' => $listeVisites,
                     'matricule' => $user->getId(),
+                    'nom' => $user->getNom(),
+                    'prenom' => $user->getPrenom(),
                     'listeMedicament' => $listeMedicament
                 ));
 
@@ -194,7 +197,6 @@
         public function genererPdf(Request $request)
         {
             $data = $request->request;
-
             $entityManager = $this->getDoctrine()->getManager();
 
             $visite = $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
@@ -219,14 +221,49 @@
                 'nbMedicaments' => $data->get('nbMedicaments')
             );
 
-            for ($i=1; $i <= $data->get('nbMedicaments'); $i++)
-            { 
-                $numMedicament = "medicament".$i;
-                $$numMedicament = $entityManager->getRepository(Medicament::class)->findOneBy(array('idMedicament' => $data->get('medicament'.$i)));
+            $html = $this->renderView('moduleVisiteurs/compterendupdf.html.twig', $infosVisite);
+            
+            $pdfOptions = new Options();
+            $pdfOptions->set('defaultFont', 'Lato');
+            $compteRenduPdf = new Dompdf($pdfOptions);
+            $compteRenduPdf->loadHtml($html);
+            $compteRenduPdf->setPaper('A4', 'portrait');
+            $compteRenduPdf->render();
 
-                $infosVisite = array_merge($infosVisite, array("medicament".$i => $$numMedicament->getNomMedicament()));
-                array_merge($infosVisite, array("quantite".$i => $data->get('quantite'.$i)));
-            }
+            $nomFichier = "compte_rendu_". $data->get('id');
+
+            return new Response($compteRenduPdf->stream($nomFichier));
+        }
+
+        /**
+         * @Route("/envoiMail", name="envoiMail", methods={"POST"})
+         */
+        public function envoiMail(Request $request, \Swift_Mailer $mailer)
+        {
+            $data = $request->request;
+            $entityManager = $this->getDoctrine()->getManager();
+
+            $visite = $entityManager->getRepository(Visite::class)->findOneBy(array('idVisite' => $data->get('id')));
+            $praticien = $entityManager->getRepository(Praticiens::class)->findOneBy(array('idPraticiens' => $data->get('praticien')));
+            $visiteur = $entityManager->getRepository(Profil::class)->findOneBy(array('id' => $data->get('visiteur')));
+
+            if ($data->get('convaincu') == "on") 
+                {   $convaincu = "Oui";  }
+            else {  $convaincu = "Non";  }
+
+            $infosVisite = array(
+                'visite' => $visite,
+                'idVisite' => $data->get('id'),
+                'prenomPraticien' => $praticien->getPrenom(),
+                'nomPraticien' => $praticien->getNom(),
+                'prenomVisiteur' => $visiteur->getPrenom(),
+                'nomVisiteur' => $visiteur->getNom(),
+                'dateVisite' => date('d/m/Y', strtotime($data->get('date_visite'))),
+                'contreVisite' => date('d/m/Y', strtotime($data->get('contre_visite'))),
+                'motif' => $data->get('motif'),
+                'convaincu' => $convaincu,
+                'nbMedicaments' => $data->get('nbMedicaments')
+            );
 
             $html = $this->renderView('moduleVisiteurs/compterendupdf.html.twig', $infosVisite);
             
@@ -238,8 +275,18 @@
             $compteRenduPdf->render();
 
             $nomFichier = "compte_rendu_". $data->get('id');
+            $data = $compteRenduPdf->output();
 
-            return new Response($compteRenduPdf->stream($nomFichier));
+            $email = (new \Swift_Message('Compte rendu de la visite de '. $visiteur->getPrenom(). ' '. $visiteur->getNom()))
+            ->setFrom('projetlbc2020@gmail.com')
+            ->setTo('client.projetlbc@gmail.com')
+            ->setBody('Voici le compte rendu de la visite effectuée. Ceci est un mail automatique !');
+
+            $attachement = new \Swift_Attachment($data, $nomFichier, 'application/pdf' );
+            $email->attach($attachement);
+            $mailer->send($email);
+
+            return $this->redirectToRoute('gestionVisite');
         }
     }
 

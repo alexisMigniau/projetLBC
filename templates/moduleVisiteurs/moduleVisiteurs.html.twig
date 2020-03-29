@@ -19,7 +19,7 @@
         <div class="tab-content" id="pills-tabContent">
             <div class="tab-pane fade show active" id="pills-liste" role="tabpanel" aria-labelledby="pills-liste-tab">
 
-                <div class="form-group row">
+                {# <div class="form-group row">
             
                     <div class="col-sm-4 mb-3 mb-sm-0">
                         <input type="text" class="form-control" name="choix_visiteur" placeholder="Recherche par praticien, visiteur ..." />
@@ -35,7 +35,7 @@
 
                 </div>
 
-                <hr>
+                <hr> #}
 
                 <div class="form-group row">
                     <div class="col-sm-2 mb-3 mb-sm-0">
@@ -93,10 +93,16 @@
                         <div class="col-sm-3 mb-3 mb-sm-0">
                             <select class="custom-select col-sm-12" id="praticien" name="praticien" required>
                                 <option selected value="" hidden >Sélectionner un praticien</option>
-                                {% for praticienRegion in listePraticiens %}
-                                    {% set praticien = praticienRegion.idPraticiens %}
-                                    <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
-                                {% endfor %}
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    {% for praticienRegion in listePraticiens %}
+                                        {% set praticien = praticienRegion.idPraticiens %}
+                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    {% for praticien in listePraticiens %}
+                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </div>
                         <div class="col-sm-3 mb-3 mb-sm-0">
@@ -110,7 +116,7 @@
                             </select>
                         {% else %}
                             <select class="custom-select col-sm-12" id="visiteur" name="visiteur">
-                                <option selected value="{{ matricule }}">{{ matricule }}</option>
+                                <option selected value="{{ matricule }}">{{ prenom }} {{ nom }}</option>
                             </select>
                         {% endif %}
                         </div>
@@ -199,10 +205,16 @@
                                     <input name="id" id="compteRenduId" type="hidden">
                                     <select class="custom-select col-sm-12" id="compteRenduPraticien" disabled>
                                         <option selected value="" readonly>Sélectionner un praticien</option>
-                                        {% for praticienRegion in listePraticiens %}
-                                            {% set praticien = praticienRegion.idPraticiens %}
-                                            <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
-                                        {% endfor %}
+                                        {% if is_granted('ROLE_RESPONSABLE') %}
+                                            {% for praticienRegion in listePraticiens %}
+                                                {% set praticien = praticienRegion.idPraticiens %}
+                                                <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for praticien in listePraticiens %}
+                                                <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                            {% endfor %}
+                                        {% endif %}
                                     </select>
                                     <input type="hidden" id="compteRenduPraticienInput" name="praticien">
                                 </div>
@@ -218,7 +230,7 @@
                                     <input type="hidden" id="compteRenduVisiteurInput" name="visiteur">
                                 {% else %}
                                     <select class="custom-select col-sm-12" id="compteRenduVisiteur" name="visiteur" readonly>
-                                        <option selected value="{{ matricule }}">{{ matricule }}</option>
+                                        <option selected value="{{ matricule }}">{{ prenom }} {{ nom }}</option>
                                     </select>
                                 {% endif %}
                                 </div>
@@ -282,6 +294,45 @@
             </div>
         </div>
 
+        {# Description fenêtre modale pour l'envoi de mail #}
+        <div class="modal fade" id="modalMail" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="exampleModalLabel">Envoi par mail</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <form class="user" method="POST" action="{{ path('envoiMail') }}" autocomplete="off">
+                        <div class="modal-body">
+                            <p>Voulez-vous envoyer le compte rendu à cette adresse mail ?</p>
+                            <div class="form-group row">
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" name="adresseMail" id="adresseMail" readonly>
+                                </div>
+                            </div>
+
+                            <input name="id" id="mailId" type="hidden">
+                            <input type="hidden" id="mailPraticienInput" name="praticien">
+                            <input type="hidden" id="mailVisiteurInput" name="visiteur">                            <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" id="mailDatevisite" hidden>
+                            <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee" id="mailContrevisite" hidden>
+                            <input type="text" class="form-control" aria-label="Motif" name="motif" id="mailMotif" hidden>
+                            <input type="checkbox" class="custom-control-input" id="mailConvaincu" name="convaincu" hidden>
+                            <input type="text" id="mailNbMedicaments" name="nbMedicaments" value="0" hidden>
+                            <div id="mailListeAjoutsMedicaments"></div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                            <input type="submit" class="btn btn-success" value="Envoyer par mail" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
             <div class="modal fade" id="modalModification" tabindex="-1" role="dialog">
                 <div class="modal-dialog modal-xl" role="document">
                     <div class="modal-content">
@@ -303,10 +354,16 @@
                                         <input name="id" id="modifId" type="hidden">
                                         <select class="custom-select col-sm-12" id="modifPraticien" name="praticien">
                                             <option selected value="">Sélectionner un praticien</option>
-                                            {% for praticienRegion in listePraticiens %}
-                                                {% set praticien = praticienRegion.idPraticiens %}
-                                                <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
-                                            {% endfor %}
+                                            {% if is_granted('ROLE_RESPONSABLE') %}
+                                                {% for praticienRegion in listePraticiens %}
+                                                    {% set praticien = praticienRegion.idPraticiens %}
+                                                    <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                                {% endfor %}
+                                            {% else %}
+                                                {% for praticien in listePraticiens %}
+                                                    <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                                {% endfor %}
+                                            {% endif %}
                                         </select>
                                     </div>
                                     <div class="col-sm-3 mb-3 mb-sm-0">
@@ -320,7 +377,7 @@
                                             </select>
                                         {% else %}
                                             <select class="custom-select col-sm-12" id="modifVisiteur" name="visiteur">
-                                                <option selected value="{{ matricule }}">{{ matricule }}</option>
+                                                <option selected value="{{ matricule }}">{{ prenom }} {{ nom }}</option>
                                             </select>
                                         {% endif %}
                                     </div>
@@ -524,6 +581,9 @@
                             $('#supprimer-visite').attr("name", "");
                             $('#supprimer-visite').attr("data-target", "#avertissementModal");
 
+                            $('#envoi-mail').attr("name", "");
+                            $('#envoi-mail').attr("data-target", "#avertissementModal");
+
                             $(this).removeClass("selectionne");
                             $(this).css("fontWeight", "normal");
 
@@ -541,6 +601,9 @@
 
                             $('#supprimer-visite').attr("name", id);
                             $('#supprimer-visite').attr("data-target", "#modalSuppression");
+
+                            $('#envoi-mail').attr("name", id);
+                            $('#envoi-mail').attr("data-target", "#modalMail");
 
                             $(this).addClass("selectionne");
                             $(this).css("fontWeight", "bold");
@@ -620,7 +683,8 @@
                 });
 
 
-                $('#modalModification').on('hide.bs.modal', function(e) {
+                $('#modalModification').on('hide.bs.modal', function(e) 
+                {
 
                     $('#modifListeAjoutsMedicaments').empty();
                 });
@@ -693,6 +757,63 @@
                 $('#modalCompteRendu').on('hide.bs.modal', function(e) {
 
                     $('#compteRenduListeAjoutsMedicaments').empty();
+                });
+
+
+                $('#modalMail').on('show.bs.modal', function(e) {
+
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+                        
+                        if(idVisite == '{{ visite.idVisite }}')
+                        {   
+                            $('#mailId').val('{{ visite.idVisite }}');
+                            $('#adresseMail').val('client.projetlbc@gmail.com');
+                            $('#mailPraticienInput').val('{{ visite.idPraticiens.idPraticiens }}');
+                            $('#mailVisiteurInput').val('{{ visite.matricule.matricule.id }}');
+                            $('#mailDatevisite').val('{{ visite.dateVisite|date("Y-m-d") }}');
+                            $('#mailMotif').val('{{ visite.motif }}');
+                            {% if visite.convaincu == 1 %}
+                                $('#mailConvaincu').prop('checked', true);
+                            {% else %}
+                                $('#mailConvaincu').prop('checked', false);
+                            {% endif %}
+                            $('#mailContrevisite').val('{{ visite.visitePlanifie|date("Y-m-d") }}');
+
+                            var nbMedicaments = 0;
+
+                            {% for medicament in visite.idMedicament %}
+
+                                nbMedicaments++;
+
+                                {% for offrir in medicament.offrir %}
+
+                                    if(idVisite == '{{ offrir.idVisite.idVisite }}')
+                                    {   
+                                        var qte = '{{ offrir.quantiteEchantillon }}';
+                                    }
+
+                                {% endfor %}
+
+                                $('#mailListeAjoutsMedicaments').append(
+                                    '<input type="hidden" id="medicament'+ nbMedicaments +'Input" name="medicament'+ nbMedicaments +'" > \
+                                    <input type="number" step="any" class="form-control" name="quantite'+ nbMedicaments +'" id="quantite'+ nbMedicaments +'" placeholder="Quantité offerte" min="1" value="'+ qte +'" hidden>'
+                                );
+
+                                $('#medicament'+ nbMedicaments +'Input').val("{{ medicament.idMedicament }}");
+
+                            {% endfor %}
+
+                            $('#mailNbMedicaments').attr('value', nbMedicaments);
+                        }
+                    {% endfor %}
+                });
+
+
+                $('#modalMail').on('hide.bs.modal', function(e) {
+
+                    $('#mailListeAjoutsMedicaments').empty();
                 });
 
 
