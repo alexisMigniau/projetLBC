@@ -101,6 +101,12 @@ class Visite
         $this->offrir = new ArrayCollection();
     }
 
+    public function clearMedicamentOffrir()
+    {
+        $this->getIdMedicament()->clear();
+        $this->getOffrir()->clear();
+    }
+
     public function getIdVisite(): ?int
     {
         return $this->idVisite;
