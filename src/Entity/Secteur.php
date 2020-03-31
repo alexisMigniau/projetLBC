@@ -28,9 +28,8 @@ class Secteur
     private $nomSecteur;
 
      /**
-     * @var int
-     * 
-     * @ORM\Column(name="idResponsable", type="integer", nullable=true)
+     *  @ORM\OneToOne(targetEntity="Profil")
+     *  @ORM\JoinColumn(name="id_responsable", referencedColumnName="id")
      */
     private $idResponsable;
 
@@ -56,12 +55,12 @@ class Secteur
         return $this;
     }
 
-    public function getIdResponsable(): ?int
+    public function getIdResponsable(): ?Profil
     {
         return $this->idResponsable;
     }
 
-    public function setIdResponsable(?int $idResponsable): self
+    public function setIdResponsable(?Profil $idResponsable): self
     {
         $this->idResponsable = $idResponsable;
 

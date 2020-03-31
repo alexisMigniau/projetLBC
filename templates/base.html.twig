@@ -18,9 +18,6 @@
   <!-- Core plugin JavaScript-->
   <script src="{{asset('vendor/jquery-easing/jquery.easing.min.js')}}"></script>
 
-  <!-- Custom scripts for all pages-->
-  <script src="{{asset('js/sb-admin-2.min.js')}}"></script>
-
   <!-- Custom fonts for this template-->
   <link href="{{ asset('vendor/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
@@ -28,6 +25,11 @@
   {# Inclusion de script pour une liste déroulante à choix multiple avec barre de recherche  #}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/js/bootstrap-multiselect.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.15/css/bootstrap-multiselect.css" integrity="sha256-7stu7f6AB+1rx5IqD8I+XuIcK4gSnpeGeSjqsODU+Rk=" crossorigin="anonymous" />
+
+  {# Script et CSS nécessaire pour le script dataTable #}
+  <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.20/js/dataTables.bootstrap4.min.js"></script>
+  <link href="https://cdn.datatables.net/1.10.20/css/dataTables.bootstrap4.min.css" rel="stylesheet">
 
   <!-- Custom styles for this template-->
   <link href="{{asset('css/sb-admin-2.min.css')}}" rel="stylesheet">
@@ -44,7 +46,9 @@
 
       <!-- Sidebar - Brand -->
       <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ path('home') }}">
-        <div class="sidebar-brand-text mx-3">Projet LBC</div>
+        <div class="sidebar-brand-icon">
+        Projet LBC
+        </div>
       </a>
 
       <!-- Divider -->
@@ -59,21 +63,21 @@
 
       <!-- Nav Item - Charts -->
       <li class="nav-item">
-        <a class="nav-link" href="{# path('gestionVisite') #}">
+        <a class="nav-link" href="{{ path('gestionVisite') }}">
           <i class="fas fa-fw fa-eye"></i>
           <span>Gestion des visites</span></a>
       </li>
 
       <!-- Nav Item - Charts -->
       <li class="nav-item">
-        <a class="nav-link" href="{# path('gestionCarriere') #}">
+        <a class="nav-link" href="{{ path('gestionFrais') }}">
           <i class="fas fa-fw fa-chart-area"></i>
-          <span>Gestion des carrières</span></a>
+          <span>Gestion des Frais</span></a>
       </li>
 
       <!-- Nav Item - Charts -->
       <li class="nav-item">
-        <a class="nav-link" href="{# path('gestionEchantillons') #}">
+        <a class="nav-link" href="{{ path('gestionEchantillons') }}">
           <i class="fas fa-fw fa-flask"></i>
           <span>Gestion des échantillons</span></a>
       </li>
@@ -126,7 +130,7 @@
                 {% if is_granted('ROLE_VISITEUR') %}
                 Visiteur
                 {% elseif is_granted('ROLE_RESPONSABLE') %}
-                Responsable
+                Responsable du secteur {{ nomSecteur(app.user.id) }} : 
                 {% elseif is_granted('ROLE_COMPTABLE') %}
                 Comptable
                 {% endif %}
@@ -197,6 +201,9 @@
   <a class="scroll-to-top rounded" href="#page-top">
     <i class="fas fa-angle-up"></i>
   </a>
+
+  <!-- Custom scripts for all pages-->
+  <script src="{{asset('js/sb-admin-2.min.js')}}"></script>
 
 </body>
 

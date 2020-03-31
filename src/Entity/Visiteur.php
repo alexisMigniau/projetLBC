@@ -15,9 +15,8 @@ use Doctrine\ORM\Mapping as ORM;
 class Visiteur
 {
     /**
-     * @var int
-     *
-     * @ORM\Column(name="matricule", type="integer", nullable=false)
+     * @ORM\OneToOne(targetEntity="Profil")
+     * @ORM\JoinColumn(name="matricule", referencedColumnName="id")
      * @ORM\Id
      */
     private $matricule;
@@ -62,7 +61,7 @@ class Visiteur
         $this->matricule = $id;
     }
 
-    public function getMatricule(): ?int
+    public function getMatricule(): ?Profil
     {
         return $this->matricule;
     }
@@ -115,6 +114,13 @@ class Visiteur
         if ($this->idPraticiens->contains($idPraticien)) {
             $this->idPraticiens->removeElement($idPraticien);
         }
+
+        return $this;
+    }
+
+    public function setMatricule(?Profil $matricule): self
+    {
+        $this->matricule = $matricule;
 
         return $this;
     }

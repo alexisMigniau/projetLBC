@@ -1,0 +1,694 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+{# On affiche le formulaire de création d'un praticiens seulement si c'est un responsable qui est connecté #}
+    <script src="https://cdn.jsdelivr.net/npm/places.js@1.17.1"></script>
+
+        {# Système de recherche #}
+        <div class="form-group row">
+            
+            {% if is_granted('ROLE_RESPONSABLE') %}
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <select class="custom-select bg-warning text-dark" id="typeRecherche">
+                    <option selected value="multicritere">Recherche multicritère</option>
+                    <option value="region">Recherche par région</option>
+                </select>
+            </div>
+            {% endif %}
+
+            <div class="col-sm-4 mb-3 mb-sm-0">
+                <select class="custom-select" id="selectRegion">
+                    <option selected value="">Choix d'une région</option>
+                    {% for region in listeRegion %}
+                    <option value="{{ region.nomRegion }}">{{ region.nomRegion }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" class="form-control" id="rechercheMulticritere" placeholder="Recherche sur nom , prénom, région , visiteur,  spécialité ">
+            </div>
+
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <select class="custom-select" multiple="multiple" id="selectVisiteur">
+                {% for visiteurRegion in listeVisiteur %}
+                    {% set visiteur = visiteurRegion.matricule.matricule %}
+                    <option value="{{visiteur.prenom }} {{visiteur.nom }}">{{visiteur.prenom }} {{ visiteur.nom }}</option>
+                {% endfor %}
+                </select>             
+            </div>
+            
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <button class="btn btn-success col-sm-12" id="recherche" type="button"><i class="fas fa-search"></i>&nbsp;&nbsp;&nbsp;Lancer la recherche</button>
+            </div>
+
+            <div class="col-sm-2 mb-3 mb-sm-0">
+                <button class="btn btn-danger col-sm-12" id="reset_recherche" type="button"><i class="fas fa-undo"></i>&nbsp;&nbsp;&nbsp;Reset la recherche</button>
+            </div>
+        </div>
+
+        <hr>
+
+        {# Barre de navigation #}
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="pills-liste-tab" data-toggle="pill" href="#pills-liste" role="tab" aria-controls="pills-liste" aria-selected="true"><i class="fas fa-table"></i>&nbsp;&nbsp;&nbsp;Liste</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-carte-tab" data-toggle="pill" href="#pills-carte" role="tab" aria-controls="pills-carte" aria-selected="false"><i class="fas fa-map-marker-alt"></i>&nbsp;&nbsp;&nbsp;Carte</a>
+            </li>
+            {% if is_granted('ROLE_RESPONSABLE') %}
+                <li class="nav-item">
+                    <a class="nav-link" id="pills-ajouter-tab" data-toggle="pill" href="#pills-ajouter" role="tab" aria-controls="pills-ajouter" aria-selected="false"><i class="fas fa-user-plus"></i>&nbsp;&nbsp;&nbsp;Création de praticiens</a>
+                </li>
+            {% endif %}
+        </ul>
+
+        {# Contenu des barre de navigation #}
+        <div class="tab-content" id="pills-tabContent">
+            {# Tableau #}
+            <div class="tab-pane fade show active" id="pills-liste" role="tabpanel" aria-labelledby="pills-liste-tab">
+                <table id="listePraticien" style="width:100%;" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th style="width:10%;">Dernière visite</th>
+                            <th>Notoriété</th>
+                            <th>Région</th>
+                            <th>Spécialité</th>
+                            <th style="width:25%;">Adresse</th>
+                            <th>Liste des visiteurs</th>
+                            <th>Action</th>
+                            <th>Longitude</th>
+                            <th>Latitude</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for praticienRegion in listePraticien %}
+                            {% if is_granted('ROLE_RESPONSABLE') %}
+                                {% set praticien = praticienRegion.getIdPraticiens %}
+                                {% set nomRegion = praticienRegion.regCode.nomRegion %}
+                            {% else %}
+                                {% set praticien = praticienRegion %}
+                                {% set nomRegion = listeRegion[0].regCode.nomRegion %}
+                            {% endif %}
+                                <tr style="font-weight: 600;">
+                                    <td>{{ praticien.nom }}</td>
+                                    <td>{{ praticien.prenom }}</td>
+                                    <td>{% if praticien.getDerniereVisite != NULL %}{{ praticien.getDerniereVisite|date("d/m/Y") }}{% else %}Pas de visite{% endif %}</td>
+                                    <td>{{ praticien.notoriete }}</td>
+                                    <td>{{ nomRegion }}</td>
+                                    <td>{{ praticien.idSpecialite.nomSpecialite }}</td>
+                                    <td>{{ praticien.adresse }}</td>
+                                    <td>
+                                        <select style="font-weight: 600;" class="form-control" name="role" id="role">
+                                            {% for visiteur in praticien.matricule %}
+                                                <option style="font-weight: 600;">{{ visiteur.matricule.prenom }} {{ visiteur.matricule.nom }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td><button type="button" name="{{praticien.idPraticiens}}" class="btn btn-primary btn-sm btn-block" data-toggle="modal" data-target="#modalModification"><i class="fas fa-pencil-alt"></i> Modifier</button></td>
+                                    <td>{{ praticien.longitude }}</td>
+                                    <td>{{ praticien.latitude }}</td>
+                                    <td>{{ praticien.idPraticiens }}</td>
+                                </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {# Carte #}
+            <div class="tab-pane fade" id="pills-carte" role="tabpanel" style="height:700px;" aria-labelledby="pills-carte-tab">
+            </div>
+            {% if is_granted('ROLE_RESPONSABLE') %}
+                {# Création de praticiens #}
+                <div class="tab-pane fade" id="pills-ajouter" role="tabpanel" aria-labelledby="pills-ajouter-tab">
+                    <form class="user" method="POST" action="{{ path('creationPraticien') }}" autocomplete="off">
+                        <div class="form-group row">
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="nom" placeholder="Nom" required>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="Prenom" placeholder="Prenom" required>
+                            </div>
+                            <div class="col-sm-4 mb-3 mb-sm-0">
+                                <input type="text" class="form-control" name="adresse" id="adresse" placeholder="Adresse" required>
+                                <input id="latitude" name="latitude" type="hidden" required>
+                                <input id="longitude" name="longitude" type="hidden" required>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="number" step="any" class="form-control" name="notoriete" placeholder="Notoriété" required min="0" max="10">
+                            </div>
+                            <div class="input-group col-sm-4 mb-3 mb-sm-0">
+                                <div class="input-group-prepend">
+                                    <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modalSpecialite">Création d'une spécialité</button>
+                                </div>
+                                <select class="form-control" name="specialite" id="specialite" required>
+                                    <option value="" hidden>Choisissez une spécialité</option>
+                                    {% for spec in listeSpec %}
+                                        <option value="{{ spec.idSpecialite }}">{{ spec.nomSpecialite }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <select class="form-control" name="region" id="region" required>
+                                    <option value="" hidden>Choisissez une région</option>
+                                    {% for region in listeRegion %}
+                                        <option value="{{ region.regCode}}">{{ region.nomRegion }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <select class="btn multiSelect" multiple="multiple" name="listeVisiteur[]" id="listeVisiteur">
+                                </select>
+                            </div>
+                            <div class="col-sm-2 mb-3 mb-sm-0">
+                                <input type="submit" class="btn btn-success" value="Créer un praticien">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {# Script pour la partie création de praticiens #}
+                <script type="text/javascript">
+                    function initMultiSelect()
+                    {
+                        // Init pour le select à choix multiple
+                        $('#listeVisiteur').multiselect(
+                        {
+                            templates: {
+                                button: '<button type="button" class="btn btn-primary multiselect dropdown-toggle" data-toggle="dropdown">Choisissez un ou des visiteurs</button>'
+                        }});
+
+                        $('#listeVisiteur').multiselect('disable');
+                    }
+
+                    $(document).ready(function() {
+                        $('#alertSpecialite').hide();
+
+                        initMultiSelect();
+
+                        //Création d'une Specialite
+                        $('#saveSpecialite').click(function(){
+                            var nomSpecialite = $('#nomSpecialite').val();
+
+                            if(nomSpecialite.length === 0)
+                            {
+                                $('#alerteSpecialiteMes').html("Vous devez rentrez un nom pour la spécialite à créee !");
+                                $('#alertSpecialite').show();
+                                return false;
+                            } else
+                            {
+                                //On fait une requête ajax pour ajouter une région
+                                $.ajax({
+                                    url: "{{ path('ajouterSpecialite') }}",
+                                    type: 'POST',
+                                    data: 'nomSpecialite=' + nomSpecialite,
+                                    // Si on a une réponse success alors on ferme le pop-up et on sélectionne la région qui vient d'être créee dans la liste
+                                    success: function(response)
+                                    {
+                                        $('#modalSpecialite').modal('toggle');
+                                        $('#specialite').append("<option selected value=" + response + ">" + nomSpecialite + "</option>");
+                                        $('#alertSpecialite').hide();
+                                    },
+                                    error: function(error)
+                                    {
+                                        $('#alerteSpecialiteMes').html("Cette spécialité existe déja !");
+                                        $('#alertSpecialite').show();
+                                    }
+                                })
+                            }
+                        })
+                        //Lors du choix de la région, il faut actualiser la liste des visiteurs qui sont liée à cette région
+                        $('#region').on('change' , function()
+                        {
+                            
+                            $.ajax({
+                                url: "{{ path('getVisiteurByRegion') }}",
+                                type: 'POST',
+                                data: 'regCode=' + this.value,
+                                success: function(response)
+                                {
+                                    var taille = response.length;
+
+                                    $('#listeVisiteur').empty();
+
+                                    var listeVisiteur = [];
+
+                                    for(var i = 0; i < taille; i++)
+                                        listeVisiteur.push({label:response[i][2] + " " + response[i][3] , title: response[i][2] + " " + response[i][3] , value: response[i][1]});
+
+                                    $('.multiSelect').multiselect('dataprovider', listeVisiteur);
+                                    
+                                    if(response[0] == undefined)
+                                        $('.multiSelect').multiselect('disable');
+                                }
+                            });
+                        });
+
+                        //Fonction autocomplete pour l'adresse
+                        var placesAutocomplete = places({
+                            appId: 'plWVN0RARQTV',
+                            apiKey: '98227310a78a6ae36adc1a6185f79d82',
+                            container: document.querySelector('#adresse'),
+                            language: 'fr',
+                            countries: ['fr']
+                        });
+
+                        //Lorsqu'on a choisit une adresse, on met les input longitude et latitude a la bonne valeur
+                        placesAutocomplete.on('change', e =>  {
+                            var lat = e.suggestion.latlng.lat;
+                            var lng = e.suggestion.latlng.lng;
+                            
+                            $('#latitude').val(lat);
+                            $('#longitude').val(lng);
+                        });
+                    });
+                </script>
+            {% endif %}
+        </div>
+
+        {# Script pour leaflet #}
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js" integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==" crossorigin=""></script>
+        
+        {# Script pour la partie de recherche #}
+        <script type="text/javascript">
+            $(document).ready(function() {
+                // Init pour le select à choix multiple
+                $('#selectVisiteur').multiselect(
+                {
+                    templates: {
+                        button: '<button type="button" class="btn btn-primary multiselect dropdown-toggle" data-toggle="dropdown">Choisissez un ou des visiteurs</button>'
+                        }
+                });
+
+                // Partie Carte
+                var map = L.map('pills-carte').setView([46.887176, 2.388973], 6);
+
+                L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                    attribution: 'Projet LBC'
+                }).addTo(map);
+                
+
+                //On crée un tableau qui contient tout les markers
+                var listeMarker = new Object();
+
+                {% for praticienRegion in listePraticien %}
+                    {% if is_granted('ROLE_RESPONSABLE') %}
+                        {% set praticien = praticienRegion.getIdPraticiens %}
+                        {% set nomRegion = praticienRegion.regCode.nomRegion %}
+                    {% else %}
+                        {% set praticien = praticienRegion %}
+                        {% set nomRegion = listeRegion[0].regCode.nomRegion %}
+                    {% endif %}
+
+                    //On ajoute un marker à la map
+                    listeMarker[{{praticien.idPraticiens}}] = L.marker([{{ praticien.latitude }} , {{ praticien.longitude }} ]).addTo(map);
+
+                    // On définit un popup pour ce marker
+                    var contenuPopup = `
+                    <table style='width:100%;'>
+                        <tr><td style='text-align:left;' ><b>Nom :</b> {{ praticien.nom}}</td><td style='text-align:right;'><b>Prénom :</b> {{ praticien.prenom}}</td></tr>
+                        <tr><td style='text-align:left;' ><b>Spécialité :</b> {{ praticien.idSpecialite.nomSpecialite }}</td><td style='text-align:right;'><b>Notoriété :</b> {{ praticien.notoriete }}</td></tr>
+                        <tr><td style='text-align:left;'><b>Adresse :</b> {{ praticien.adresse }}</td><td style='text-align:right;'><b>Liste des visiteurs : </b><select>
+                                {% for visiteur in praticien.matricule %}
+                                    <option>{{ visiteur.matricule.prenom }} {{ visiteur.matricule.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </td></tr>
+                        <tr><td style='text-align:left;' ><b>Région :</b> {{ nomRegion }}</td></tr>
+                    </table>
+                    <hr>
+                    <button type="button" name="{{praticien.idPraticiens}}" class="btn btn-warning btn-sm btn-block" data-toggle="modal" data-target="#modalModification"><i class="fas fa-pencil-alt"></i> Modifier</button>`;
+
+                    listeMarker[{{praticien.idPraticiens}}].bindPopup(contenuPopup, { maxWidth:400, minWidth:200 });
+                {% endfor %}
+
+                function updateMap(listePraticien)
+                {
+                    var listePoint = [];
+
+                    for(var i = 0; i < listePraticien.length ; i++)
+                        listePoint.push(listePraticien[i][11]);
+
+                    for(var i in listeMarker)
+                    {
+                        if(!listePoint.includes(i))
+                            listeMarker[i].remove();
+                        else
+                            listeMarker[i].addTo(map);
+                    }
+                }
+
+                // Initialisation du script dataTable
+                var dataTable = $('#listePraticien').DataTable(
+                    {
+                        "searching":true,
+                        "dom": "ltipr",
+                        "language": 
+                        {
+                            "url" : "https://cdn.datatables.net/plug-ins/1.10.20/i18n/French.json"
+                        },
+                        "columnDefs": [
+                            { "orderable": false, "targets": 6 },
+                            { "orderable": false, "targets": 7 },
+                            { "orderable": false, "targets": 8 },
+                            //On cache les colonnes latitude , longitude , et id , elle servent justent pour la pop-up et n'ont pas d'utiliter dans le tableau
+                            { "visible": false, "targets": 9 },
+                            { "visible": false, "targets": 10 },
+                            { "visible": false, "targets": 11 }
+                        ]
+                    }
+                );
+
+                //Partie de recherche
+                //On cache les selecte
+                $('#selectRegion').hide();
+
+                //On affiche le champ correspondant au type de recherche choisit
+                $('#typeRecherche').change(function()
+                {
+                    if(this.value == 'region')
+                    {
+                        $('#selectRegion').show();
+                        $('#rechercheMulticritere').hide();
+                    } else if(this.value == 'multicritere')
+                    {
+                        $('#selectRegion').hide();
+                        $('#rechercheMulticritere').show();
+                    }
+                })
+
+                // Lors du clique sur le bouton Lancer la recherche, on regarde , si le champ est bien remplie et alors on lance la recherche
+                $('#recherche').click(function()
+                {
+                    var typeRecherche = $('#typeRecherche').val();
+                    
+                    if(typeRecherche == 'region')
+                    {
+                        var region = $('#selectRegion').val();
+                        dataTable.columns(4).search(region);
+                    } else if(typeRecherche == 'multicritere')
+                    {
+                        var str = $('#rechercheMulticritere').val();
+                        dataTable.search(str);
+                    }
+
+                    // Pour chaque visiteur séléctionnée, on le cherche dans la colonne visiteur
+                    var listeVisiteur = ($('#selectVisiteur').val());
+                    
+                    var str_search = listeVisiteur.join("|");
+                    
+                    dataTable.columns(7).search(str_search, true , false);
+
+                    dataTable.draw();
+
+                    //On met à jour les marqueurs sur la map
+                    updateMap(dataTable.rows({search:'applied'}).data());                  
+                });
+
+                // Lors du clique sur le bouton de reset
+                $('#reset_recherche').click(function()
+                {
+                    // on vide tous les champs de recherche
+                    $('#selectRegion').val("");
+                    $('#rechercheMulticritere').val("");
+                    $('#selectVisiteur').multiselect('deselectAll', false);
+
+                    // on reset la recherche a NULL
+                    dataTable.search('');
+                    dataTable.columns(4).search('');
+                    dataTable.columns(7).search('').draw();
+
+                    updateMap(dataTable.rows({search:'applied'}).data());        
+                });
+
+                $("a[href='#pills-carte']").on('shown.bs.tab', function(e) {
+                    map.invalidateSize();
+                });
+
+                //Lorsqu'on vient de créer un praticien on affiche seulement ce praticien
+                {% for idPraticien in app.flashes('info') %}
+                    dataTable.columns(11).search({{ idPraticien }});
+                    dataTable.draw();
+                {% endfor %}
+            } );
+        </script>
+
+        {# Modal de modification d'un praticien #}
+        <div class="modal fade" id="modalModification" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Modification d'un praticiens</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form class="user" method="POST" action="{{ path('modificationPraticien') }}" autocomplete="off">
+                    <div class="modal-body">
+                            <div class="form-group row">
+                                <input name="id" id="modifId" type="hidden">
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" id="modifNom" name="nom" placeholder="Nom" required>
+                                </div>
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" id="modifPrenom" name="Prenom" placeholder="Prenom" required>
+                                </div>
+                                <div class="col-sm-6 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" name="adresse" id="modifAdresse" placeholder="Adresse" required>
+                                    <input id="modifLatitude" name="latitude" type="hidden" required>
+                                    <input id="modifLongitude" name="longitude" type="hidden" required>
+                                </div>
+                                
+                            </div>
+                            <div class="form-group row">
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <input type="number" step="any" class="form-control" id="modifNotoriete" name="notoriete" placeholder="Notoriété" required min="0" max="10">
+                                </div>
+                                <div class="input-group col-sm-5 mb-3 mb-sm-0">
+
+                                    <select class="form-control" name="specialite" id="modifSpecialite" required>
+                                        <option value="" hidden>Choisissez une spécialité</option>
+                                        {% for spec in listeSpec %}
+                                            <option value="{{ spec.idSpecialite }}">{{ spec.nomSpecialite }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <select class="form-control" name="region" id="modifRegion" required {% if not is_granted('ROLE_RESPONSABLE') %} disabled {% endif %}>
+                                        <option value="" hidden>Choisissez une région</option>
+                                        {% for region in listeRegion %}
+                                            {% if is_granted('ROLE_VISITEUR') %}{% set region = listeRegion[0].regCode %}{% endif %}
+                                            <option value="{{ region.regCode}}">{{ region.nomRegion }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    {% if is_granted('ROLE_RESPONSABLE') %}
+                                        <select class="btn multiSelect" multiple="multiple" name="listeVisiteur[]" id="modifListeVisiteur">
+                                        </select>
+                                    {% else %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Liste des visiteurs
+                                            </button>
+                                            <div class="dropdown-menu" id="modeVisit_listeVisiteur" aria-labelledby="dropdownMenuButton">
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-sm-2 mb-3 mb-sm-0 text-right">
+                                </div>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                        <input type="submit" class="btn btn-success" value="Modifier ce praticien">
+                    </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# Script pour la partie modification #}
+        <script type="text/javascript">
+            $(document).ready(function(){
+                function initMultiSelect()
+                {
+                    // Init pour le select à choix multiple
+                    $('#modifListeVisiteur').multiselect(
+                    {
+                        templates: {
+                            button: '<button type="button" class="btn btn-primary multiselect dropdown-toggle" data-toggle="dropdown">Choisissez un ou des visiteurs</button>'
+                    }});
+
+                    $('#modifListeVisiteur').multiselect('disable');
+                }
+
+                $('#alertSpecialiteVide').hide();
+
+                initMultiSelect();
+
+                //Création d'une Specialite
+                $('#saveSpecialite').click(function(){
+                    var nomSpecialite = $('#nomSpecialite').val();
+
+                    if(nomSpecialite.length === 0)
+                    {
+                        $('#alertSpecialiteVide').show();
+                        return false;
+                    } else
+                    {
+                        //On fait une requête ajax pour ajouter une région
+                        $.ajax({
+                            url: "{{ path('ajouterSpecialite') }}",
+                            type: 'POST',
+                            data: 'nomSpecialite=' + nomSpecialite,
+                            // Si on a une réponse success alors on ferme le pop-up et on sélectionne la région qui vient d'être créee dans la liste
+                            success: function(response)
+                            {
+                                $('#modalSpecialite').modal('toggle');
+                                $('#modifSpecialite').append("<option selected value=" + response + ">" + nomSpecialite + "</option>");
+                                $('#alertSpecialiteVide').hide();
+                            }
+                        })
+                    }
+                })
+                //Lors du choix de la région, il faut actualiser la liste des visiteurs qui sont liée à cette région
+                $('#modifRegion').on('change' , function()
+                {
+                    
+                    $.ajax({
+                        url: "{{ path('getVisiteurByRegion') }}",
+                        type: 'POST',
+                        data: 'regCode=' + this.value,
+                        success: function(response)
+                        {
+                            var taille = response.length;
+
+                            $('#modifListeVisiteur').empty();
+
+                            var listeVisiteur = [];
+
+                            for(var i = 0; i < taille; i++)
+                                listeVisiteur.push({label:response[i][2] + " " + response[i][3] , title: response[i][2] + " " + response[i][3] , value: response[i][1]});
+
+                            $('#modifListeVisiteur').multiselect('dataprovider', listeVisiteur);
+                            
+                            if(response[0] == undefined)
+                                $('#modifListeVisiteur').multiselect('disable');
+                        }
+                    });
+
+
+                });
+
+                //Fonction autocomplete pour l'adresse
+                var placesAutocomplete = places({
+                    appId: 'plWVN0RARQTV',
+                    apiKey: '98227310a78a6ae36adc1a6185f79d82',
+                    container: document.querySelector('#modifAdresse'),
+                    language: 'fr',
+                    countries: ['fr']
+                });
+
+                //Lorsqu'on a choisit une adresse, on met les input longitude et latitude a la bonne valeur
+                placesAutocomplete.on('change', e =>  {
+                    var lat = e.suggestion.latlng.lat;
+                    var lng = e.suggestion.latlng.lng;
+                    
+                    $('#modifLatitude').val(lat);
+                    $('#modifLongitude').val(lng);
+                });
+
+                $('#modalModification').on('show.bs.modal', function (e)
+                {
+                    var idPraticiens = e.relatedTarget.name;
+
+                    // On parcours la liste de tout les praticiens, et si c'est celui qu'on doit modifier , alors on les champs au valeurs correspondante
+                    {% for praticienRegion in listePraticien %}
+                        {% if is_granted('ROLE_RESPONSABLE') %}
+                            {% set praticien = praticienRegion.getIdPraticiens %}
+                            {% set idRegion = praticienRegion.regCode.regCode %}
+                        {% else %}
+                            {% set praticien = praticienRegion %}
+                            {% set idRegion = listeRegion[0].regCode.regCode%}
+                        {% endif %}
+                        
+                        if(idPraticiens == '{{ praticien.idPraticiens }}' )
+                        {
+                            $('#modifId').val('{{ praticien.idPraticiens }}');   
+                            $('#modifNom').val('{{ praticien.nom }}');
+                            $('#modifPrenom').val('{{ praticien.prenom }}');
+                            $('#modifNotoriete').val('{{ praticien.notoriete }}');
+                            $('#modifAdresse').val('{{ praticien.adresse }}');
+                            $('#modifLongitude').val('{{ praticien.longitude }}');
+                            $('#modifLatitude').val('{{ praticien.latitude }}');
+                            $('#modifSpecialite').val('{{ praticien.idSpecialite.idSpecialite }}');
+                            $('#modifRegion').val('{{ idRegion }}');
+
+                            // Si c'est un responsable alors , on coche les bonnes cases dans le multiselect, et si c'est un visiteur, on affiche seulement les visiteurs qui y sont liée
+                            {% if is_granted('ROLE_RESPONSABLE') %}
+                                $.ajax({
+                                    url: "{{ path('getVisiteurByRegion') }}",
+                                    type: 'POST',
+                                    data: 'regCode={{ praticienRegion.regCode.regCode }}',
+                                    success: function(response)
+                                    {
+                                        var taille = response.length;
+
+                                        $('#modifListeVisiteur').empty();
+
+                                        var listeVisiteur = [];
+
+                                        for(var i = 0; i < taille; i++)
+                                            listeVisiteur.push({label:response[i][2] + " " + response[i][3] , title: response[i][2] + " " + response[i][3] , value: response[i][1]});
+
+                                        $('#modifListeVisiteur').multiselect('dataprovider', listeVisiteur);
+                                        
+                                        if(response[0] == undefined)
+                                            $('#modifListeVisiteur').multiselect('disable');
+
+                                        {% for visiteur in praticien.matricule %}
+                                            $('#modifListeVisiteur').multiselect('select' , '{{ visiteur.matricule.id }}');
+                                        {% endfor %}
+                                    }
+                                });
+                            {% else %}
+                                $('#modeVisit_listeVisiteur').empty();
+                                {% for visiteur in praticien.matricule %}
+                                    $('#modeVisit_listeVisiteur').append('<a class="dropdown-item" href="#">{{ visiteur.matricule.prenom }} {{ visiteur.matricule.nom }}</a>');
+                                {% endfor %}
+                            {% endif %}
+                        }
+                    {% endfor %}
+                    });
+            });
+        </script>
+
+         {# Modal pour créer une spécialité #}
+        <div class="modal fade" id="modalSpecialite" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Création d'une spécialite</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body formSpecialite">
+                        <input type="text" class="form-control" name="nomSpecialite" id="nomSpecialite" placeholder="Nom de la spécialite">
+                        <div id="alertSpecialite">
+                            <br>
+                            <div class="alert alert-danger" id="alerteSpecialiteMes"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                        <button type="button" class="btn btn-success" id="saveSpecialite">Créer la Specialite</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endblock %}

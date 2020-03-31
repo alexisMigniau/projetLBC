@@ -33,6 +33,7 @@ class Horsforfait
      */
     private $montant;
 
+    
     /**
      * @var string
      *
@@ -47,7 +48,7 @@ class Horsforfait
      * @ORM\GeneratedValue(strategy="NONE")
      * @ORM\OneToOne(targetEntity="Frais")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="id_frais", referencedColumnName="id_frais")
+     *   @ORM\JoinColumn(name="id_frais", referencedColumnName="id_frais" ,onDelete="CASCADE")
      * })
      */
     private $idFrais;
@@ -69,12 +70,13 @@ class Horsforfait
         return $this->dateHorsforfait;
     }
 
-    public function setDateHorsforfait(\DateTimeInterface $dateHorsforfait): self
+    public function setDateHorsforfait(?\DateTimeInterface $dateHorsforfait): self
     {
         $this->dateHorsforfait = $dateHorsforfait;
 
         return $this;
     }
+    
 
     public function getMontant(): ?string
     {

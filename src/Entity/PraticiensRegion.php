@@ -15,9 +15,7 @@ class PraticiensRegion
     /**
      * @var \DateTime
      *
-     * @ORM\Column(name="dateAffectation", type="date", nullable=false)
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="NONE")
+     * @ORM\Column(name="dateAffectation", type="datetime", nullable=false)
      */
     private $dateaffectation;
 
@@ -51,6 +49,12 @@ class PraticiensRegion
      * })
      */
     private $idPraticiens;
+
+    public function __construct()
+    {
+        $this->dateaffectation = new \DateTime();
+        $this->active = true;
+    }
 
     public function getDateaffectation(): ?\DateTimeInterface
     {
@@ -89,6 +93,13 @@ class PraticiensRegion
     public function setIdPraticiens(?Praticiens $idPraticiens): self
     {
         $this->idPraticiens = $idPraticiens;
+
+        return $this;
+    }
+
+    public function setDateaffectation(\DateTimeInterface $dateaffectation): self
+    {
+        $this->dateaffectation = $dateaffectation;
 
         return $this;
     }

@@ -1,0 +1,836 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+
+	<script src="https://cdn.jsdelivr.net/npm/places.js@1.17.1"></script>
+
+        <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="pills-liste-tab" data-toggle="pill" href="#pills-liste" role="tab" aria-controls="pills-liste" aria-selected="true"><i class="fas fa-table"></i>&nbsp;&nbsp;&nbsp;Liste des visites</a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" id="pills-ajouter-tab" data-toggle="pill" href="#pills-ajouter" role="tab" aria-controls="pills-ajouter" aria-selected="false"><i class="fas fa-plus"></i>&nbsp;&nbsp;&nbsp;Enregistrer une visite</a>
+            </li>
+        </ul>
+
+        <hr>
+
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane fade show active" id="pills-liste" role="tabpanel" aria-labelledby="pills-liste-tab">
+
+                {# <div class="form-group row">
+            
+                    <div class="col-sm-4 mb-3 mb-sm-0">
+                        <input type="text" class="form-control" name="choix_visiteur" placeholder="Recherche par praticien, visiteur ..." />
+                    </div>
+
+                    <div class="col-sm-2 mb-3 mb-sm-0">
+                        <button class="btn btn-success col-sm-12" id="recherche" type="button"><i class="fas fa-search"></i>&nbsp;&nbsp;&nbsp;Lancer la recherche</button>
+                    </div>
+
+                    <div class="col-sm-2 mb-3 mb-sm-0">
+                        <button class="btn btn-danger col-sm-12" id="reset_recherche" type="button"><i class="fas fa-undo"></i>&nbsp;&nbsp;&nbsp;Reset la recherche</button>
+                    </div>
+
+                </div>
+
+                <hr> #}
+
+                <div class="form-group row">
+                    <div class="col-sm-2 mb-3 mb-sm-0">
+                        <button class="btn btn-primary col-sm-12" id="envoi-mail" name="" type="button" data-toggle="modal" data-target="#avertissementModal"><i class="far fa-envelope"></i>&nbsp;&nbsp;&nbsp;Envoyer par mail</button>
+                    </div>
+                    <div class="col-sm-2 mb-3 mb-sm-0">
+                        <button class="btn btn-secondary col-sm-12" id="compte-rendu" name="" type="button" data-toggle="modal" data-target="#avertissementModal"><i class="far fa-file"></i>&nbsp;&nbsp;&nbsp;Générer compte rendu</button>
+                    </div>
+                    <div class="col-sm-2 mb-3 mb-sm-0">
+                        <button class="btn btn-warning col-sm-12" id="modifier-visite" name="" type="button" data-toggle="modal" data-target="#avertissementModal"><i class="fas fa-pencil-alt"></i>&nbsp;&nbsp;&nbsp;Modifier la visite</button>
+                    </div>
+                    <div class="col-sm-2 mb-3 mb-sm-0">
+                        <button class="btn btn-danger col-sm-12" id="supprimer-visite" name="" type="button" data-toggle="modal" data-target="#avertissementModal"><i class="fas fa-times"></i>&nbsp;&nbsp;&nbsp;Supprimer la visite</button>
+                    </div>
+                </div>
+
+                <hr>
+
+                <table id="listeVisites" style="width:100%;" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID Visite</th>
+                            <th>Praticien</th>
+                            <th>Visiteur</th>
+                            <th>Date de la visite</th>
+                            <th>Convaincu</th>
+                            <th>Contre Visite</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visite in listeVisites %}
+                        <tr id="{{ visite.idVisite }}">
+                            <td>{{ visite.idVisite }}</td>
+                            <td>{{ visite.idPraticiens.prenom }} {{ visite.idPraticiens.nom }}</td>
+                            <td>{{ visite.matricule.matricule.prenom }} {{ visite.matricule.matricule.nom }}</td>
+                            <td>{{ visite.dateVisite|date('d/m/Y') }}</td>
+                            <td>    {% if visite.convaincu == 1 %}Oui{% else %}Non{% endif %}   </td>
+                            <td>{{ visite.visitePlanifie|date('d/m/Y') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="pills-ajouter" role="tabpanel" aria-labelledby="pills-ajouter-tab">
+                <form class="user" method="POST" action="{{ path('creationVisite') }}" autocomplete="off">
+
+                    <div class="form-group row">
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                            <h5>Informations générales : </h5>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                            <select class="custom-select col-sm-12" id="praticien" name="praticien" required>
+                                <option selected value="" hidden >Sélectionner un praticien</option>
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    {% for praticienRegion in listePraticiens %}
+                                        {% set praticien = praticienRegion.idPraticiens %}
+                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    {% for praticien in listePraticiens %}
+                                        <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                    {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                        {% if is_granted('ROLE_RESPONSABLE') %}
+                            <select class="custom-select col-sm-12" id="visiteur" name="visiteur" required>
+                                <option selected value="" hidden >Sélectionner un visiteur</option>
+                                {% for visiteurRegion in listeVisiteurs %}
+                                    {% set visiteur = visiteurRegion.matricule.matricule %}
+                                    <option value="{{ visiteur.Id }}">{{ visiteur.prenom }} {{ visiteur.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <select class="custom-select col-sm-12" id="visiteur" name="visiteur">
+                                <option selected value="{{ matricule }}">{{ prenom }} {{ nom }}</option>
+                            </select>
+                        {% endif %}
+                        </div>
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="date_visite">Date Visite</span>
+                                </div>
+                                <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" required>
+                            </div>
+                        </div>
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="visite_planifiee">Contrevisite</span>
+                                </div>
+                                <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-sm-9 mb-3 mb-sm-0">
+                            <div class="input-group mb-9">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="motif">Motif</span>
+                                </div>
+                                <input type="text" class="form-control" aria-label="Motif" name="motif" />
+                            </div>
+                        </div>
+                        <div class="form-group col-md-3">
+                            <div class="input-group mb-3">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" id="convaincu" name="convaincu">
+                                    <label class="custom-control-label" for="convaincu">Convaincu</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                                
+                    <div class="form-group row">
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                            <h5>Médicaments présentés : </h5>
+                        </div>
+                    </div>
+                                
+                    <div class="form-group row">
+                        <div class="col-sm-2 mb-1 mb-sm-0">
+                            <button type="button" class="btn btn-link" id="plusMedicament" name="0"><i class="fas fa-plus"></i>&nbsp;&nbsp;Ajouter un médicament</button>
+                            <input type="text" id="nbMedicaments" name="nbMedicaments" value="0" hidden>
+                        </div>
+                    </div>
+
+                    <div id="listeAjoutsMedicaments"></div><hr>
+                                
+                    <div class="form-group row">
+                        <div class="col-sm-3 mb-3 mb-sm-0">
+                            <input type="submit" class="btn btn-success" value="Enregistrer une visite">
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {# Description fenêtre modale pour les comptes rendus #}
+        <div class="modal fade" id="modalCompteRendu" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="exampleModalLabel">Récapitulatif</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <form class="user" method="POST" action="{{ path('genererPdf') }}" autocomplete="off">
+                        <div class="modal-body">
+
+                            <div class="form-group row">
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <h5>Informations générales : </h5>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <input name="id" id="compteRenduId" type="hidden">
+                                    <select class="custom-select col-sm-12" id="compteRenduPraticien" disabled>
+                                        <option selected value="" readonly>Sélectionner un praticien</option>
+                                        {% if is_granted('ROLE_RESPONSABLE') %}
+                                            {% for praticienRegion in listePraticiens %}
+                                                {% set praticien = praticienRegion.idPraticiens %}
+                                                <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                            {% endfor %}
+                                        {% else %}
+                                            {% for praticien in listePraticiens %}
+                                                <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </select>
+                                    <input type="hidden" id="compteRenduPraticienInput" name="praticien">
+                                </div>
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                {% if is_granted('ROLE_RESPONSABLE') %}
+                                    <select class="custom-select col-sm-12" id="compteRenduVisiteur" disabled>
+                                        <option selected value="" readonly>Sélectionner un visiteur</option>
+                                        {% for visiteurRegion in listeVisiteurs %}
+                                            {% set visiteur = visiteurRegion.matricule.matricule %}
+                                            <option value="{{ visiteur.Id }}">{{ visiteur.prenom }} {{ visiteur.nom }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" id="compteRenduVisiteurInput" name="visiteur">
+                                {% else %}
+                                    <select class="custom-select col-sm-12" id="compteRenduVisiteur" name="visiteur" readonly>
+                                        <option selected value="{{ matricule }}">{{ prenom }} {{ nom }}</option>
+                                    </select>
+                                {% endif %}
+                                </div>
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="date_visite">Date Visite</span>
+                                        </div>
+                                        <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" id="compteRenduDatevisite" readonly required>
+                                    </div>
+                                </div>
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <div class="input-group mb-3">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text" id="visite_planifiee">Contrevisite</span>
+                                        </div>
+                                        <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee" id="compteRenduContrevisite" readonly>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-9 mb-3 mb-sm-0">
+                                    <div class="input-group mb-9">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text">Motif</span>
+                                        </div>
+                                        <input type="text" class="form-control" aria-label="Motif" name="motif" id="compteRenduMotif" readonly>
+                                    </div>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="compteRenduConvaincu" name="convaincu" readonly>
+                                        <label class="custom-control-label" for="convaincu">Convaincu</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <h5>Médicaments présentés : </h5>
+                                </div>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <input type="text" id="compteRenduNbMedicaments" name="nbMedicaments" value="0" hidden>
+                                </div>
+                            </div>
+
+                            <div id="compteRenduListeAjoutsMedicaments"></div>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                            <input type="submit" class="btn btn-success" value="Générer le PDF" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {# Description fenêtre modale pour l'envoi de mail #}
+        <div class="modal fade" id="modalMail" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title" id="exampleModalLabel">Envoi par mail</h4>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <form class="user" method="POST" action="{{ path('envoiMail') }}" autocomplete="off">
+                        <div class="modal-body">
+                            <p>Voulez-vous envoyer le compte rendu à cette adresse mail ?</p>
+                            <div class="form-group row">
+                                <div class="col-sm-3 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" name="adresseMail" id="adresseMail" readonly>
+                                </div>
+                            </div>
+
+                            <input name="id" id="mailId" type="hidden">
+                            <input type="hidden" id="mailPraticienInput" name="praticien">
+                            <input type="hidden" id="mailVisiteurInput" name="visiteur">                            <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" id="mailDatevisite" hidden>
+                            <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee" id="mailContrevisite" hidden>
+                            <input type="text" class="form-control" aria-label="Motif" name="motif" id="mailMotif" hidden>
+                            <input type="checkbox" class="custom-control-input" id="mailConvaincu" name="convaincu" hidden>
+                            <input type="text" id="mailNbMedicaments" name="nbMedicaments" value="0" hidden>
+                            <div id="mailListeAjoutsMedicaments"></div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                            <input type="submit" class="btn btn-success" value="Envoyer par mail" />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+            <div class="modal fade" id="modalModification" tabindex="-1" role="dialog">
+                <div class="modal-dialog modal-xl" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title" id="exampleModalLabel">Modification d'une visite</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form class="user" method="POST" action="{{ path('modificationVisite') }}" autocomplete="off">
+                            <div class="modal-body">
+                                <div class="form-group row">
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        <h5>Informations générales : </h5>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        <input name="id" id="modifId" type="hidden">
+                                        <select class="custom-select col-sm-12" id="modifPraticien" name="praticien">
+                                            <option selected value="">Sélectionner un praticien</option>
+                                            {% if is_granted('ROLE_RESPONSABLE') %}
+                                                {% for praticienRegion in listePraticiens %}
+                                                    {% set praticien = praticienRegion.idPraticiens %}
+                                                    <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                                {% endfor %}
+                                            {% else %}
+                                                {% for praticien in listePraticiens %}
+                                                    <option value="{{ praticien.idPraticiens }}">{{ praticien.prenom }} {{ praticien.nom }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        {% if is_granted('ROLE_RESPONSABLE') %}
+                                            <select class="custom-select col-sm-12" id="modifVisiteur" name="visiteur">
+                                                <option selected value="">Sélectionner un visiteur</option>
+                                                {% for visiteurRegion in listeVisiteurs %}
+                                                    {% set visiteur = visiteurRegion.matricule.matricule %}
+                                                    <option value="{{ visiteur.Id }}">{{ visiteur.prenom }} {{ visiteur.nom }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        {% else %}
+                                            <select class="custom-select col-sm-12" id="modifVisiteur" name="visiteur">
+                                                <option selected value="{{ matricule }}">{{ prenom }} {{ nom }}</option>
+                                            </select>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="date_visite">Date Visite</span>
+                                            </div>
+                                            <input type="date" class="form-control" placeholder="Date Visite" name="date_visite" aria-label="Date Visite" aria-describedby="date_visite" id="modifDatevisite" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text" id="visite_planifiee">Contrevisite</span>
+                                            </div>
+                                            <input type="date" class="form-control" placeholder="Contrevisite" name="contre_visite" aria-label="Contrevisite" aria-describedby="visite_planifiee" id="modifContrevisite" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-9 mb-3 mb-sm-0">
+                                        <div class="input-group mb-9">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Motif</span>
+                                            </div>
+                                        <input type="text" class="form-control" aria-label="Motif" name="motif" id="modifMotif" />
+                                        </div>
+                                    </div>
+                                    <div class="form-group col-md-3">
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" id="modifConvaincu" name="convaincu">
+                                            <label class="custom-control-label" for="convaincu">Convaincu</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        <h5>Médicaments présentés : </h5>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-sm-3 mb-3 mb-sm-0">
+                                        <button type="button" class="btn btn-link" id="modifPlusMedicament" name="0"><i class="fas fa-plus"></i>&nbsp;&nbsp;Ajouter un médicament</button>
+                                        <input type="text" id="modifNbMedicaments" name="nbMedicaments" value="0" hidden>
+                                    </div>
+                                </div>
+                                <div id="modifListeAjoutsMedicaments"></div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+                                <input type="submit" class="btn btn-success" value="Modifier la visite" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="modalSuppression" tabindex="-1" role="dialog" aria-labelledby="modalSuppressionLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalSuppressionLabel">Aucune visite sélectionnée</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <form class="user" method="POST" action="{{ path('suppressionVisite') }}" autocomplete="off">
+                            <div class="modal-body">
+                                <p>Êtes-vous sûr de vouloir supprimer cette visite ?</p>
+                                <input type="text" class="form-control" name="id" id="supprIdVisite" readonly />
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                                <input type="submit" class="btn btn-danger" value="Supprimer la visite" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="avertissementModal" tabindex="-1" role="dialog" aria-labelledby="avertissementModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="avertissementModalLabel">Aucune visite sélectionnée</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Veuillez sélectionner une visite !</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-dismiss="modal">Fermer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script type="text/javascript">
+
+                var dataTable = $('#listeVisites').DataTable(
+                    {
+                        "searching":true,
+                        "lengthChange": false,
+                        "dom": "ltipr",
+                        "language": 
+                        {
+                            "url" : "https://cdn.datatables.net/plug-ins/1.10.20/i18n/French.json"
+                        }
+                    }
+                );
+
+
+                $('#plusMedicament').click( function() {  
+
+                    var nbMedicaments = $(this).attr('name');
+                    nbMedicaments++
+                    $(this).attr('name', nbMedicaments);
+                    $('#nbMedicaments').attr('value', nbMedicaments);
+
+                    $('#listeAjoutsMedicaments').append(
+                        '<div class="form-group row"> \
+                            <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                <select class="custom-select col-sm-12" id="medicament'+ nbMedicaments +'" name="medicament'+ nbMedicaments +'" required>  \
+                                    <option selected value="" hidden >Sélectionner un médicament</option> \
+                                    {% for medicament in listeMedicament %} \
+                                        <option value="{{ medicament.idMedicament }}">{{ medicament.nomMedicament }}</option> \
+                                    {% endfor %} \
+                                </select> \
+                            </div> \
+                            <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                <input type="number" step="any" class="form-control" name="quantite'+ nbMedicaments +'" id="quantite'+ nbMedicaments +'" placeholder="Quantité offerte" min="1" required/> \
+                            </div> \
+                            <div class="col-sm-2 mb-1 mb-sm-0"> \
+                                <button type="button" class="btn btn-danger" onclick="supprLigneMedicament(this)"><i class="fas fa-times"></i></button> \
+                            </div> \
+                        </div>'
+                    );
+                });
+
+                $('#modifPlusMedicament').click( function() {  
+
+                    var nbMedicaments = $('#modifNbMedicaments').val();
+                    nbMedicaments++;
+                    $('#modifNbMedicaments').attr('value', nbMedicaments);
+
+                    $('#modifListeAjoutsMedicaments').append(
+                        '<div class="form-group row"> \
+                            <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                <select class="custom-select col-sm-12" id="medicament'+ nbMedicaments +'" name="medicament'+ nbMedicaments +'" required>  \
+                                    <option selected value="" hidden >Sélectionner un médicament</option> \
+                                    {% for medicament in listeMedicament %} \
+                                        <option value="{{ medicament.idMedicament }}">{{ medicament.nomMedicament }}</option> \
+                                    {% endfor %} \
+                                </select> \
+                            </div> \
+                            <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                <input type="number" step="any" class="form-control" name="quantite'+ nbMedicaments +'" id="quantite'+ nbMedicaments +'" placeholder="Quantité offerte" min="1" required/> \
+                            </div> \
+                            <div class="col-sm-2 mb-1 mb-sm-0"> \
+                                <button type="button" class="btn btn-danger" onclick="supprLigneMedicament(this)"><i class="fas fa-times"></i></button> \
+                            </div> \
+                        </div>'
+                    );
+                });
+  
+                function supprLigneMedicament(e) {
+
+                    var nbMedicaments = $('#nbMedicaments').val();
+                    nbMedicaments--;
+                    $('#plusMedicament').attr('name', nbMedicaments);
+                    $('#nbMedicaments').attr('value', nbMedicaments);
+                    e.parentNode.parentNode.remove();
+                }
+
+                $('#listeVisites > tbody > tr').each(function() {
+                        $(this).mouseenter(function() {
+                            $(this).css("backgroundColor","lightgray");
+                            $(this).css("cursor","pointer");
+                        });
+                        $(this).mouseleave(function() {
+                            $(this).css("backgroundColor","white");
+                            $(this).css("cursor","auto");
+                        }); 
+                });
+
+                $('#listeVisites > tbody > tr').each(function() {
+
+                    $(this).click(function() {
+
+                        if ($(this).hasClass("selectionne")) {
+
+                            $('#compte-rendu').attr("name", "");
+                            $('#compte-rendu').attr("data-target", "#avertissementModal");
+
+                            $('#modifier-visite').attr("name", "");
+                            $('#modifier-visite').attr("data-target", "#avertissementModal");
+
+                            $('#supprimer-visite').attr("name", "");
+                            $('#supprimer-visite').attr("data-target", "#avertissementModal");
+
+                            $('#envoi-mail').attr("name", "");
+                            $('#envoi-mail').attr("data-target", "#avertissementModal");
+
+                            $(this).removeClass("selectionne");
+                            $(this).css("fontWeight", "normal");
+
+                        } else {
+
+                            setUnselected();
+
+                            var id = $(this).attr('id');
+
+                            $('#compte-rendu').attr("name", id);
+                            $('#compte-rendu').attr("data-target", '#modalCompteRendu');
+
+                            $('#modifier-visite').attr("name", id);
+                            $('#modifier-visite').attr("data-target", "#modalModification");
+
+                            $('#supprimer-visite').attr("name", id);
+                            $('#supprimer-visite').attr("data-target", "#modalSuppression");
+
+                            $('#envoi-mail').attr("name", id);
+                            $('#envoi-mail').attr("data-target", "#modalMail");
+
+                            $(this).addClass("selectionne");
+                            $(this).css("fontWeight", "bold");
+                        }
+                    });
+                });
+
+
+                function setUnselected()
+                {
+                    $('#listeVisites > tbody > tr').each(function() {
+                        $(this).removeClass("selectionne");
+                        $(this).css("fontWeight", "normal");
+                    });
+                }
+
+
+                $('#modalModification').on('show.bs.modal', function (e)
+                {
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+                        
+                        if(idVisite == '{{ visite.idVisite }}')
+                        {   
+                            $('#modifId').val('{{ visite.idVisite }}');
+                            $('#modifPraticien').val('{{ visite.idPraticiens.idPraticiens }}');
+                            $('#modifVisiteur').val('{{ visite.matricule.matricule.id }}');
+                            $('#modifDatevisite').val('{{ visite.dateVisite|date("Y-m-d") }}');
+                            $('#modifMotif').val('{{ visite.motif }}');
+                            {% if visite.convaincu == 1 %}
+                                $('#modifConvaincu').prop('checked', true);
+                            {% else %}
+                                $('#modifConvaincu').prop('checked', false);
+                            {% endif %}
+                            $('#modifContrevisite').val('{{ visite.visitePlanifie|date("Y-m-d") }}');
+
+                            var nbMedicaments = 0;
+
+                            {% for medicament in visite.idMedicament %}
+
+                                nbMedicaments++;
+
+                                {% for offrir in medicament.offrir %}
+
+                                    if(idVisite == '{{ offrir.idVisite.idVisite }}')
+                                    {   
+                                        var qte = '{{ offrir.quantiteEchantillon }}';
+                                    }
+
+                                {% endfor %}
+
+                                $('#modifListeAjoutsMedicaments').append(
+                                    '<div class="form-group row"> \
+                                        <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                            <select class="custom-select col-sm-12" id="medicament'+ nbMedicaments +'" name="medicament'+ nbMedicaments +'" required>  \
+                                                <option selected value="{{ medicament.idMedicament }}" hidden>{{ medicament.nomMedicament }}</option> \
+                                                {% for modifMedicament in listeMedicament %} \
+                                                    <option value="{{ modifMedicament.idMedicament }}">{{ modifMedicament.nomMedicament }}</option> \
+                                                {% endfor %} \
+                                            </select> \
+                                        </div> \
+                                        <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                            <input type="number" step="any" class="form-control" name="quantite'+ nbMedicaments +'" id="quantite'+ nbMedicaments +'" placeholder="Quantité offerte" min="1" value="'+ qte +'" required/> \
+                                        </div> \
+                                        <div class="col-sm-2 mb-1 mb-sm-0"> \
+                                            <button type="button" class="btn btn-danger" onclick="supprLigneMedicament(this)"><i class="fas fa-times"></i></button> \
+                                        </div> \
+                                    </div>'
+                                );
+
+                            {% endfor %}
+
+                            $('#modifNbMedicaments').attr('value', nbMedicaments);
+                        }
+                    {% endfor %}
+                });
+
+
+                $('#modalModification').on('hide.bs.modal', function(e) 
+                {
+
+                    $('#modifListeAjoutsMedicaments').empty();
+                });
+
+
+                $('#modalCompteRendu').on('show.bs.modal', function(e) {
+
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+                        
+                        if(idVisite == '{{ visite.idVisite }}')
+                        {   
+                            $('#compteRenduId').val('{{ visite.idVisite }}');
+                            $('#compteRenduPraticien').val('{{ visite.idPraticiens.idPraticiens }}');
+                            $('#compteRenduPraticienInput').val('{{ visite.idPraticiens.idPraticiens }}');
+                            $('#compteRenduVisiteur').val('{{ visite.matricule.matricule.id }}');
+                            $('#compteRenduVisiteurInput').val('{{ visite.matricule.matricule.id }}');
+                            $('#compteRenduDatevisite').val('{{ visite.dateVisite|date("Y-m-d") }}');
+                            $('#compteRenduMotif').val('{{ visite.motif }}');
+                            {% if visite.convaincu == 1 %}
+                                $('#compteRenduConvaincu').prop('checked', true);
+                            {% else %}
+                                $('#compteRenduConvaincu').prop('checked', false);
+                            {% endif %}
+                            $('#compteRenduContrevisite').val('{{ visite.visitePlanifie|date("Y-m-d") }}');
+
+                            var nbMedicaments = 0;
+
+                            {% for medicament in visite.idMedicament %}
+
+                                nbMedicaments++;
+
+                                {% for offrir in medicament.offrir %}
+
+                                    if(idVisite == '{{ offrir.idVisite.idVisite }}')
+                                    {   
+                                        var qte = '{{ offrir.quantiteEchantillon }}';
+                                    }
+
+                                {% endfor %}
+
+                                $('#compteRenduListeAjoutsMedicaments').append(
+                                    '<div class="form-group row"> \
+                                        <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                            <select class="custom-select col-sm-12" id="medicament'+ nbMedicaments +'" disabled>  \
+                                                <option selected value="{{ medicament.idMedicament }}" hidden>{{ medicament.nomMedicament }}</option> \
+                                                {% for compteRenduMedicament in listeMedicament %} \
+                                                    <option value="{{ compteRenduMedicament.idMedicament }}">{{ compteRenduMedicament.nomMedicament }}</option> \
+                                                {% endfor %} \
+                                            </select> \
+                                            <input type="hidden" id="medicament'+ nbMedicaments +'Input" name="medicament'+ nbMedicaments +'" >\
+                                        </div> \
+                                        <div class="col-sm-3 mb-3 mb-sm-0"> \
+                                            <input type="number" step="any" class="form-control" name="quantite'+ nbMedicaments +'" id="quantite'+ nbMedicaments +'" placeholder="Quantité offerte" min="1" value="'+ qte +'" readonly> \
+                                        </div> \
+                                    </div>'
+                                );
+
+                                $('#medicament'+ nbMedicaments +'Input').val("{{ medicament.idMedicament }}");
+
+                            {% endfor %}
+
+                            $('#compteRenduNbMedicaments').attr('value', nbMedicaments);
+                        }
+                    {% endfor %}
+                });
+
+
+                $('#modalCompteRendu').on('hide.bs.modal', function(e) {
+
+                    $('#compteRenduListeAjoutsMedicaments').empty();
+                });
+
+
+                $('#modalMail').on('show.bs.modal', function(e) {
+
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+                        
+                        if(idVisite == '{{ visite.idVisite }}')
+                        {   
+                            $('#mailId').val('{{ visite.idVisite }}');
+                            $('#adresseMail').val('client.projetlbc@gmail.com');
+                            $('#mailPraticienInput').val('{{ visite.idPraticiens.idPraticiens }}');
+                            $('#mailVisiteurInput').val('{{ visite.matricule.matricule.id }}');
+                            $('#mailDatevisite').val('{{ visite.dateVisite|date("Y-m-d") }}');
+                            $('#mailMotif').val('{{ visite.motif }}');
+                            {% if visite.convaincu == 1 %}
+                                $('#mailConvaincu').prop('checked', true);
+                            {% else %}
+                                $('#mailConvaincu').prop('checked', false);
+                            {% endif %}
+                            $('#mailContrevisite').val('{{ visite.visitePlanifie|date("Y-m-d") }}');
+
+                            var nbMedicaments = 0;
+
+                            {% for medicament in visite.idMedicament %}
+
+                                nbMedicaments++;
+
+                                {% for offrir in medicament.offrir %}
+
+                                    if(idVisite == '{{ offrir.idVisite.idVisite }}')
+                                    {   
+                                        var qte = '{{ offrir.quantiteEchantillon }}';
+                                    }
+
+                                {% endfor %}
+
+                                $('#mailListeAjoutsMedicaments').append(
+                                    '<input type="hidden" id="medicament'+ nbMedicaments +'Input" name="medicament'+ nbMedicaments +'" > \
+                                    <input type="number" step="any" class="form-control" name="quantite'+ nbMedicaments +'" id="quantite'+ nbMedicaments +'" placeholder="Quantité offerte" min="1" value="'+ qte +'" hidden>'
+                                );
+
+                                $('#medicament'+ nbMedicaments +'Input').val("{{ medicament.idMedicament }}");
+
+                            {% endfor %}
+
+                            $('#mailNbMedicaments').attr('value', nbMedicaments);
+                        }
+                    {% endfor %}
+                });
+
+
+                $('#modalMail').on('hide.bs.modal', function(e) {
+
+                    $('#mailListeAjoutsMedicaments').empty();
+                });
+
+
+                $('#modalSuppression').on('show.bs.modal', function(e) 
+                {
+                    var idVisite = e.relatedTarget.name;
+
+                    {% for visite in listeVisites %}
+
+                        if(idVisite == '{{ visite.idVisite }}')
+                        {
+                            $('#supprIdVisite').val('{{ visite.idVisite }}');
+                        }
+
+                    {% endfor %}
+                });
+
+            </script>
+
+{% endblock %}

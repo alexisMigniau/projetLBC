@@ -25,7 +25,8 @@ security:
                 target: /
 
     access_control:
+        - { path : ^/gestionPraticien, roles : [ ROLE_VISITEUR , ROLE_RESPONSABLE] }
         - { path: ^/home ,roles : ROLE_USER }
-        - { path: ^/visiteur, roles: ROLE_VISITEUR }
+        - { path: ^/gestionVisite, roles: [ROLE_VISITEUR, ROLE_RESPONSABLE] }
         - { path: ^/responsable, roles: ROLE_RESPONSABLE }
         - { path: ^/comptable, roles: ROLE_COMPTABLE }

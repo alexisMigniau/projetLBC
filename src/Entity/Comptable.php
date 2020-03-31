@@ -13,8 +13,8 @@ use Doctrine\ORM\Mapping as ORM;
 class Comptable
 {
     /**
-     * @var int
-     * @ORM\Column(name="id_comptable", type="integer", nullable=false)
+     * @ORM\OneToOne(targetEntity="Profil")
+     * @ORM\JoinColumn(name="id_comptable", referencedColumnName="id")
      * @ORM\Id
      */
     private $idComptable;
@@ -31,7 +31,7 @@ class Comptable
         $this->idComptable = $id;
     }
 
-    public function getIdComptable(): ?int
+    public function getIdComptable(): ?Profil
     {
         return $this->idComptable;
     }
@@ -44,6 +44,13 @@ class Comptable
     public function setSignature(?string $signature): self
     {
         $this->signature = $signature;
+
+        return $this;
+    }
+
+    public function setIdComptable(?Profil $idComptable): self
+    {
+        $this->idComptable = $idComptable;
 
         return $this;
     }

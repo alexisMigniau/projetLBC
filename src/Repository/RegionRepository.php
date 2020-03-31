@@ -19,6 +19,17 @@ class RegionRepository extends ServiceEntityRepository
         parent::__construct($registry, Region::class);
     }
 
+    public function getRegionsByResponsable($idResponsable)
+    {
+        return $this->createQueryBuilder('r')
+        ->leftJoin('App\Entity\Secteur' , 's', 'WITH' , 's.secNum = r.secNum')
+        ->andWhere('s.idResponsable = :idResponsable')
+        ->setParameter('idResponsable', $idResponsable)
+        ->select('r.regCode' , 'r.nomRegion')
+        ->getQuery()
+        ->getResult();
+    }
+
     // /**
     //  * @return Region[] Returns an array of Region objects
     //  */
