@@ -75,6 +75,7 @@
     </div>
   </div>
 </div>
+
 {# Script pour la partie de création des frais #}
 <script type="text/javascript">
     $(document).ready(function() {
@@ -119,6 +120,12 @@
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="fraisHorsForfait-tab" data-toggle="tab" href="#fraisHorsForfait" role="tab" aria-controls="fraisHorsForfait" aria-selected="false">Frais hors forfaits</a>
+            </li>
+             <li class="nav-item">
+                <a class="nav-link" id="listeFiche-tab" data-toggle="tab" href="#listeFiche" role="tab" aria-controls="listeFiche" aria-selected="false">Liste des fiches</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="remboursement-tab" data-toggle="tab" href="#remboursement" role="tab" aria-controls="listeRemboursement" aria-selected="false">Liste des remboursement</a>
             </li>
         </ul>
         {# Contenu des barre de navigation #}
@@ -174,13 +181,84 @@
                                 </a>
                             </td>
                             <td>{% if fraisHForfait.idFrais.valide %}Oui{% else %}Non{% endif %}</td>
-                            <td></td>
+                            <td><button type="button" class="btn btn-danger btn-sm btn-block" name="{{ fraisHForfait.idFrais.idFrais }}" data-toggle="modal" data-target="#modalSupprimer"><i class="fas fa-trash-alt"></i> Supprimer</button></td>
+
+                            
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Liste des fiches -->
+
+            <div class="tab-pane fade" id="listeFiche" role="tabpanel" aria-labelledby="listeFiche-tab">
+                 <table id="listeFichetab" style="width:100%;" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID de la fiche </th>
+                            <th>Mois</th>
+                            <th>Etat</th>
+                            <th>Pdf</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        {% for fich in listeFicheValide %}
+                        <tr>
+                            <td>{{ fich.idFiche }}</td>
+                            <td> {{ fich.mois|date("m/Y") }} </td>
+                            <td>{{fich.getLibelleEtat }} </td>
+                            <td>
+                                <a href="{{ path("genererFicheFrais", {'idFiche': fich.idFiche }) }}">
+                                    <div style="height:100%;width:100%">
+                                    Télécharger le PDF
+                                    </div>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Rembourssement -->
+            <div class="tab-pane fade" id="remboursement" role="tabpanel" aria-labelledby="remboursement-tab">
+                 <table id="remboursement" style="width:100%;" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>ID de la fiche </th>
+                            <th>Mois</th>
+                            <th>Etat</th>
+                            <th>Pdf</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        {% for fichR in listeFicheRembourse %}
+                        <tr>
+                            <td>{{ fichR.idFiche }}</td>
+                            <td> {{ fichR.mois|date("m/Y") }} </td>
+                            <td>{{fichR.getLibelleEtat }} </td>
+                            <td>
+                                <a href="{{ path("genererRemboursement", {'idFiche': fichR.idFiche }) }}">
+                                    <div style="height:100%;width:100%">
+                                    Télécharger le PDF
+                                    </div>
+                                </a>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
+
+         
+
+            
+   
         <!-- Modal de suppression d'un frais-->
         <div class="modal fade" id="modalSupprimer" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -211,6 +289,9 @@
             });
         </script>
     </div>
-</div> 
+    
+</div>
+
+
 
 {% endblock %}

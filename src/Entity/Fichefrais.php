@@ -52,6 +52,13 @@ class Fichefrais
      */
     private $matricule;
 
+    /**
+     *  @var \Doctrine\Common\Collections\Collection
+     * 
+     * @ORM\OneToMany(targetEntity="App\Entity\Frais", mappedBy="idFiche", orphanRemoval=true)
+     */
+    private $listeFrais;
+
     public function getIdFiche(): ?int
     {
         return $this->idFiche;
@@ -69,6 +76,18 @@ class Fichefrais
         return $this;
     }
 
+    public function getTotal()
+    {
+        $total = 0;
+
+        foreach($this->listeFrais as $frais)
+        {
+            
+        }
+
+        return $total;
+    }
+
     public function getEtat(): ?int
     {
         return $this->etat;
@@ -83,10 +102,10 @@ class Fichefrais
 
     public function getLibelleEtat()
     {
-        switch($this->etat == 0)
+        switch($this->etat)
         {
             case 0:
-                return "Crée";
+                return "Créée";
             break;
 
             case 1:
