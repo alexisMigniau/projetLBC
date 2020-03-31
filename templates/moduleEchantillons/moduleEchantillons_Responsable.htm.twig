@@ -1,0 +1,179 @@
+{% extends "base.html.twig" %}
+
+{% block body %}
+<div>
+    <label>Import d'un fichier : </label>
+    <input type="file" id="xmlPicker" accept=".xml" style="margin-right: 60px;">
+    <input type="submit" id="validerImport" value="Importer" href="{{ path('lectureFichierXML') }}">
+    <input type="submit" id="annulerImport" value="Annuler">
+
+    {# <a class="nav-link" href="{{ path('gestionEchantillons') }}">
+          <i class="fas fa-fw fa-flask"></i>
+          <span>Gestion des échantillons</span></a> #}
+
+    <script>
+        $(document).ready(function() {
+            
+            $("#validerImport").click(function(){
+                var value = $("#validerImport").val();
+                $.ajax({
+                    url: "{{ path('lectureFichierXML') }}",
+                    type: 'POST',
+                    data: {button:value},
+                    success: function(response){
+                        $('#output').append(response);
+                    }
+                });
+            });
+        });
+    </script>
+</div>
+
+<hr>
+
+<div class="tab-pane fade show active" id="AffichageVisiteur" role="tabpanel" aria-labelledby="pills-liste-tab" style="margin-top: 60px;">
+    <label>Répartition des échantillons : </label>
+    <table style="width:100%" enabled="true">
+        <tr>
+            <td style="width:20%;">
+                <table id="listeVisiteurs" class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th style="display:none;">IdVisiteur</th>
+                            <th>Nom visiteur</th>
+                            <th>Prénom visiteur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visiteurRegion in listeVisiteurs %}
+                            {% set visiteur = visiteurRegion.matricule.matricule %}
+                            <tr style="font-weiht: 600;" data-toggle="pill" data-target="#pills-listeMedicaments" id="index">
+                                <td style="display:none;">{{visiteur.id }}</td>
+                                <td>{{visiteur.nom }}</td>
+                                <td>{{visiteur.prenom }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </td>
+            <td style="width:20%;">
+            </td>
+            <td style="width:60%;" valign="top">
+                <div id="MedicamentsVisiteur" style="visibility: hidden;">
+                    <button type="button" class="btn btn-warning" data-toggle="pill" data-target="#pills-ajouterMedicament">Ajouter un médicament</button>
+                    
+                    <div class="tab-pane fade" id="pills-ajouterMedicament" role="tabpanel" aria-labelledby="pills-ajouterMedicament-tab">
+                        <form class="user" method="POST" action="{{ path('ajoutMedicament') }}" autocomplete="off">
+                            <div class="form-group row">
+                                <div class="col-sm-4 mb-3 mb-sm-0">
+                                    <input type="text" class="form-control" name="nomMedicament" placeholder="Nom médicament" required>
+                                </div>
+                                {# <div class="col-sm-4 mb-3 mb-sm-0">
+                                    <select class="form-control" name="specialite" id="specialite" required>
+                                        <option value="" hidden>Choisissez une spécialité</option>
+                                        {% for spec in listeSpec %}
+                                            <option value="{{ spec.idSpecialite }}">{{ spec.nomSpecialite }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div> #}
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <input type="number" step="any" class="form-control" name="quantite" placeholder="Quantité" required min="0" max="5000">
+                                </div>
+                                <div class="col-sm-2 mb-3 mb-sm-0">
+                                    <input type="submit" class="btn btn-success" value="Ajout d'un médicament">
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-listeMedicaments" role="tabpanel" aria-labelledby="pills-listeMedicaments-tab">
+                        <input id="idVisiteur" name="idVisiteur" type="hidden" required>
+                        <table id="listeMedicaments" class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Médicament</th>
+                                    <th>Quantité restante</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for medicamentsVisiteur in listeMedicaments %}
+                                    {% set medicaments = medicamentsVisiteur %}
+                                    {% set indexVisiteurEC = medicamentsVisiteur.matricule.matricule.id %}
+
+                                    {% if indexVisiteurEC == idVisiteur.value %}
+
+                                        {% for medicamentInfoRep in repertoireMedicaments %}
+                                            {% set medicamentInfo = medicamentInfoRep %}
+                                            
+                                            {% if medicamentInfo.idMedicament == medicaments.idMedicament.idMedicament %}
+                                                {% if medicaments.quota <= 0 %}
+                                                    {# <tr style="font-weiht: 600; background: rgb(255, 90, 90); color: white;">
+                                                        <td>{{medicamentInfo.nomMedicament}}</td>
+                                                        <td>{{medicaments.quota}}</td>
+                                                        <td>{{medicaments.quota}}</td>
+                                                    </tr> #}
+                                                    <tr style="font-weiht: 600; background: rgb(255, 90, 90); color: white;">
+                                                        <td value="{{medicamentInfo.nomMedicament}}">{{ medicamentInfo.nomMedicament }}</td>
+                                                        <td>{{medicaments.quota}}</td>
+                                                    </tr>
+                                                {% else %}
+                                                    {# <tr style="font-weiht: 600;">
+                                                        <td>{{medicamentInfo.nomMedicament}}</td>
+                                                        <td>{{medicaments.quota}}</td>
+                                                        <td>{{medicaments.quota}}</td>
+                                                    </tr> #}
+
+                                                    <tr style="font-weiht: 600;">
+                                                        <td value="{{medicamentInfo.nomMedicament}}">{{ medicamentInfo.nomMedicament }}</td>
+                                                        <td>{{medicaments.quota}}</td>
+                                                    </tr>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        $(document).ready(function() {
+            var table = $('#listeVisiteurs').DataTable();
+        
+            $('#listeVisiteurs tbody').on( "click", 'tr', function () {
+                if ( $(this).hasClass('table-primary') ) {
+                    $(this).removeClass('table-primary');
+
+                    document.getElementById("MedicamentsVisiteur").style.visibility = "hidden"; 
+                }
+                else {
+                    table.$('tr.table-primary').removeClass('table-primary');
+                    $(this).addClass('table-primary');
+
+                    document.getElementById("MedicamentsVisiteur").style.visibility = "visible";
+
+                    var idVisiteurSelect = $(this).find("td:first").html();
+                    //document.getElementById('idVisiteur').value = idVisiteurSelect;
+                    $('#idVisiteur').val(idVisiteurSelect);
+                }
+            } );
+
+            $("#AjoutMedicament").click(function(){
+                var value = $("#AjoutMedicament").val();
+                $.ajax({
+                    url: "{{ path('lectureFichierXML') }}",
+                    type: 'POST',
+                    data: {button:value},
+                    success: function(response){
+                        $('#output').append(response);
+                    }
+                });
+            });
+        } );
+    </script>
+</div>
+{% endblock %}
