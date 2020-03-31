@@ -1,0 +1,39 @@
+{# ./templates/moduleVisiteurs/compterendupdf.html.twig #}
+
+{% block body %}
+
+	<h1>Visite n°{{ idVisite }}</h1>
+
+	<h2>Informations générales</h2>
+
+	<p>Praticien : {{ prenomPraticien }} {{ nomPraticien }}</p>
+
+	<p>Visiteur : {{ prenomVisiteur }} {{ nomVisiteur }}</p>
+
+	<p>Date de la visite : {{ dateVisite }}</p>
+
+	<p>Contre visite : {{ contreVisite }}</p>
+
+	<p>Motif de la visite : {{ motif }}</p>
+
+	<p>Convaincu : {{ convaincu }}</p>
+
+	<h2>Médicaments présentés</h2>
+
+	{% for medicament in visite.idMedicament %}
+
+		{% for offrir in medicament.offrir %}
+
+			{% if idVisite == offrir.idVisite.idVisite %}
+
+				{% set qte = offrir.quantiteEchantillon %}
+
+				<p>{{ medicament.nomMedicament }} : {{qte}} échantillons offerts</p>
+	        
+	        {% endif %}
+
+	    {% endfor %}
+
+	{% endfor %}
+
+{% endblock %}
