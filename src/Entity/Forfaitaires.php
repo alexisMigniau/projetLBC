@@ -53,6 +53,13 @@ class Forfaitaires
         return $this;
     }
 
+    public function getTotal()
+    {
+        $prixUnite = $this->typeFrais->getPrixUnitaire();
+
+        return $prixUnite * $this->quantite;
+    }
+
     public function getIdFrais(): ?Frais
     {
         return $this->idFrais;

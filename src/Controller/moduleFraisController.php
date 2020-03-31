@@ -21,8 +21,10 @@
     use App\Entity\Frais;
     use App\Entity\Horsforfait;
 
+    use Dompdf\Dompdf;
+    use Dompdf\Options;
 
- /**
+    /**
     * @Route("/gestionFrais")
     */
     class moduleFraisController extends AbstractController
@@ -39,7 +41,7 @@
 
             // On recupère le  visiteur qui est connecté actuellement
             $user = $this->getUser();
-
+            
             // On recupère la fiche du mois actuelle si il n'y en a pas alors on crée une fiche
             $moisActuelle = new \DateTime();
 
@@ -76,11 +78,27 @@
             $listeForfaitaires = $em->getRepository(Forfaitaires::class)->findBy(array('idFrais' => $listeIdFrais));
             $listeHorsForfait = $em->getRepository(HorsForfait::class)->findBy(array('idFrais' => $listeIdFrais));
 
+            // Je recupère  les fiches qui sont liée à l'utilisateur et l'etat = 2  ET MOIS ACTUELLE
+            $listeFicheValide = $em->getRepository(Fichefrais::class)->findBy(array('matricule' => $user->getId()));
+            $listeFicheRembourse = $em->getRepository(Fichefrais::class)->findBy(array('matricule' => $user->getId(), 'etat' => '4' ));
+
+
+            //On récupère les frais validées
+            $listeFraisValide = $em->getRepository(Frais::class)->findBy(array('idFiche' => $listeFicheValide ));
+
+            $listeForfaitairesValide = $em->getRepository(Forfaitaires::class)->findBy(array('idFrais' => $listeFraisValide));
+            $listeHorsForfaitValide = $em->getRepository(HorsForfait::class)->findBy(array('idFrais' => $listeFraisValide));
+           
             $html = $this->render('moduleFrais/moduleFrais.html.twig', array(
                 'title' => 'Gestion des frais' ,
                 'listeRefForfait' => $listeRefForfait,
                 'listeForfaitaires' => $listeForfaitaires,
-                'listeHorsForfait' => $listeHorsForfait
+                'listeHorsForfait' => $listeHorsForfait,
+                'listeFicheValide' => $listeFicheValide,
+                'listeForfaitairesValide' => $listeForfaitairesValide,
+                'listeHorsForfaitValide' => $listeHorsForfaitValide,
+                'listeFicheRembourse' => $listeFicheRembourse
+                
             ));
             return $html;
         }
@@ -157,6 +175,102 @@
             // Permet de rediriger vers la page des frais
             return $this->redirectToRoute('gestionFrais');
         }
+
+        /**
+         * @Route("/genererFicheFrais/{idFiche}", name="genererFicheFrais")
+         */
+        public function genererPdf($idFiche)
+        {
+            $em = $this->getDoctrine()->getManager();
+
+            // On recupère l'objet fiche
+            $fiche = $em->getRepository(Fichefrais::class)->findOneBy(array("idFiche" => $idFiche));
+
+            $listeFrais = $em->getRepository(Frais::class)->findBy(array('idFiche' => $fiche));
+            //en haut, la ligne pour récuperer la données de la table Frais
+
+            // Je parcours la liste de tous les frais, et je met leur id dans un tableau , ce tableau permet de faire la recherche 
+            $listeIdFrais = array();
+
+            foreach($listeFrais as $frais)
+            {
+                array_push($listeIdFrais, $frais->getIdFrais());
+            }
+
+            //On récupere la liste des Frais de la fiche valide
+            $listeForfaitairesValide = $em->getRepository(Forfaitaires::class)->findBy(array('idFrais' => $listeIdFrais));
+            $listeHorsForfaitValide = $em->getRepository(HorsForfait::class)->findBy(array('idFrais' => $listeIdFrais));
+            $user = $this->getUser();
+
+            
+            $fichePdf = array(
+                    'fiche' => $fiche,
+                    'listeForfaitaires' => $listeForfaitairesValide,
+                    'listeHorsForfait' => $listeHorsForfaitValide,
+                    'user' => $user
+            );
+            
+            $html = $this->renderView('moduleFrais/fiche_frais_pdf.html.twig' , $fichePdf);
+
+            $pdfOptions = new Options();
+            $pdfOptions->set('defaultFont', 'Arial');
+            $fiche_frais_pdf = new Dompdf($pdfOptions);
+            $fiche_frais_pdf->loadHtml($html);
+            $fiche_frais_pdf->setPaper('A4', 'portrait');
+            $fiche_frais_pdf->render();
+
+            $nomFichier = "fiche_frais";
+            return new Response($fiche_frais_pdf->stream($nomFichier));
+        }
+
+        /**
+         * @Route("/genererRemboursement/{idFiche}", name="genererRemboursement")
+         */
+        public function genererPdfRemboursement($idFiche)
+        {
+            $em = $this->getDoctrine()->getManager();
+
+            // On recupère l'objet fiche
+            $fiche = $em->getRepository(Fichefrais::class)->findOneBy(array("idFiche" => $idFiche));
+
+            $listeFrais = $em->getRepository(Frais::class)->findBy(array('idFiche' => $fiche));
+            //en haut, la ligne pour récuperer la données de la table Frais
+
+            // Je parcours la liste de tous les frais, et je met leur id dans un tableau , ce tableau permet de faire la recherche 
+            $listeIdFrais = array();
+
+            foreach($listeFrais as $frais)
+            {
+                array_push($listeIdFrais, $frais->getIdFrais());
+            }
+
+            //On récupere la liste des Frais de la fiche valide
+            $listeForfaitairesValide = $em->getRepository(Forfaitaires::class)->findBy(array('idFrais' => $listeIdFrais));
+            $listeHorsForfaitValide = $em->getRepository(HorsForfait::class)->findBy(array('idFrais' => $listeIdFrais));
+            $user = $this->getUser();
+
+            
+            $fichePdf = array(
+                    'fiche' => $fiche,
+                    'listeForfaitaires' => $listeForfaitairesValide,
+                    'listeHorsForfait' => $listeHorsForfaitValide,
+                    'user' => $user
+            );
+            
+            $html = $this->renderView('moduleFrais/remboursement_pdf.html.twig' , $fichePdf);
+
+            $pdfOptions = new Options();
+            $pdfOptions->set('defaultFont', 'Arial');
+            $pdfOptions->set('isRemoteEnabled',true);   
+            $fiche_frais_pdf = new Dompdf($pdfOptions);
+            $fiche_frais_pdf->loadHtml($html);
+            $fiche_frais_pdf->setPaper('A4', 'portrait');
+            $fiche_frais_pdf->render();
+
+            $nomFichier = "remboursement";
+            return new Response($fiche_frais_pdf->stream($nomFichier));
+        }
+
          /**
          * @Route("/SupprimerFrais/{id}", name="SupprimerFrais") 
          */
@@ -177,5 +291,6 @@
             // Permet de rediriger vers la page des frais
             return $this->redirectToRoute('gestionFrais');
         }
+ 
     }
 ?>

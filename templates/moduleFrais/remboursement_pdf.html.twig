@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Fiche de frais</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+</head>
+<body>
+
+    <h5  align="center">Signature<h5>
+
+    <h2  align="center">REMBOURSEMENT DES FRAIS ENGAGES<h2>
+
+<p></p>
+    
+    <div align="left">Visiteur : {{ user.getId }}     {{ user.getNom }}  {{ user.getPrenom }}  </div>
+    
+    <div  align="left"> Mois : {{ fiche.mois|date("m/Y") }} </div>
+
+<h3 align="center"> Frais forfaitaires</h3>
+<table  align="center" class="table table-dark">
+   <thead>
+        <tr>
+            <th>Frais forfaitaires</th>
+            <th>Quantité</th>
+            <th>Montant unitaire</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% set total = 0 %}    
+        {% for fraisForfait in listeForfaitaires %}
+        {% set total = total + fraisForfait.getTotal %}
+        <tr>
+            <td>{{ fraisForfait.typeFrais.nom }}</td>
+            <td>{{ fraisForfait.quantite }}</td>
+            <td>{{ fraisForfait.typeFrais.prixunitaire }} €</td>
+            <td>{{ fraisForfait.getTotal }} €</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<h3 align="center"> Autres Frais</h3>
+<table align="center"  class="table table-dark"> 
+   <thead>
+        <tr>
+            <th>Libellé</th>
+            <th>Date</th>
+            <th>Montant </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for fraisHForfait in listeHorsForfait %}
+        {% set total = total + fraisHForfait.montant %}
+        <tr>
+            <td>{{ fraisHForfait.nomHorsforfait }}</td>
+            <td>{{ fraisHForfait.dateHorsforfait|date("d/m/Y")}}</td>
+            <td>{{ fraisHForfait.montant }} €</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<div>
+<table align="center"  class="table table-dark">
+
+  <tr>
+  <th></th>
+  <th></th>
+  <th></th>
+  <th></th>
+  <th></th>
+  <th></th>
+    <th> Total : </th>
+     <th></th>
+    <th>{{ total }} €</th>
+     </tr>
+     
+</table>
+
+<table align="center" >
+
+  <tr>
+  
+    <td> Fait à Paris, le {{ "now"|date("d/m/Y")}}</td>
+     
+    
+     </tr>
+  <tr>
+    <td>Vu l'agent comptable</td>
+    </tr>
+     
+</table>
+<table align="center" >
+
+  <tr>
+  
+    <td><img class="rounded float-right" src="http://vps730346.ovh.net/lbc_achraf/public/img/signature.jpg" width="100"> 
+    </td>
+  </tr>  
+
+</body>
+</html>
