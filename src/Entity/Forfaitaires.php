@@ -7,7 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 /**
  * Forfaitaires
  *
- * @ORM\Table(name="forfaitaires", indexes={@ORM\Index(name="nom_1", columns={"nom_1"}), @ORM\Index(name="nom", columns={"nom"})})
+ * @ORM\Table(name="forfaitaires", indexes={@ORM\Index(name="nom", columns={"typeFrais"})})
  * @ORM\Entity(repositoryClass="App\Repository\ForfaitairesRepository")
  */
 class Forfaitaires
@@ -26,7 +26,7 @@ class Forfaitaires
      * @ORM\GeneratedValue(strategy="NONE")
      * @ORM\OneToOne(targetEntity="Frais")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="id_frais", referencedColumnName="id_frais")
+     *   @ORM\JoinColumn(name="id_frais", referencedColumnName="id_frais",onDelete="CASCADE")
      * })
      */
     private $idFrais;
@@ -36,20 +36,10 @@ class Forfaitaires
      *
      * @ORM\ManyToOne(targetEntity="ReferenceForfait")
      * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="nom", referencedColumnName="nom")
+     *   @ORM\JoinColumn(name="typeFrais", referencedColumnName="nom")
      * })
      */
-    private $nom;
-
-    /**
-     * @var \ReferenceForfait
-     *
-     * @ORM\ManyToOne(targetEntity="ReferenceForfait")
-     * @ORM\JoinColumns({
-     *   @ORM\JoinColumn(name="nom_1", referencedColumnName="nom")
-     * })
-     */
-    private $nom1;
+    private $typeFrais;
 
     public function getQuantite(): ?int
     {
@@ -75,29 +65,15 @@ class Forfaitaires
         return $this;
     }
 
-    public function getNom(): ?ReferenceForfait
+    public function getTypeFrais(): ?ReferenceForfait
     {
-        return $this->nom;
+        return $this->typeFrais;
     }
 
-    public function setNom(?ReferenceForfait $nom): self
+    public function setTypeFrais(?ReferenceForfait $typeFrais): self
     {
-        $this->nom = $nom;
+        $this->typeFrais = $typeFrais;
 
         return $this;
     }
-
-    public function getNom1(): ?ReferenceForfait
-    {
-        return $this->nom1;
-    }
-
-    public function setNom1(?ReferenceForfait $nom1): self
-    {
-        $this->nom1 = $nom1;
-
-        return $this;
-    }
-
-
 }
